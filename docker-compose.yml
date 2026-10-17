@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: hacknova-postgres
+    environment:
+      POSTGRES_USER: hacknova
+      POSTGRES_PASSWORD: hacknova
+      POSTGRES_DB: hacknova
+    ports:
+      - "5432:5432"
+    volumes:
+      - hacknova_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hacknova -d hacknova"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  hacknova_pg:
