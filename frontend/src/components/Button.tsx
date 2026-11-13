@@ -1,6 +1,6 @@
+import type { ReactNode } from "react";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-import type { ButtonHTMLAttributes } from "react";
+import { motion, type HTMLMotionProps } from "framer-motion";
 
 const variants = {
   primary: "hn-gradient text-white shadow-glow hover:brightness-105",
@@ -10,9 +10,10 @@ const variants = {
   ai: "hn-gradient text-white shadow-glow gradient-move",
 };
 
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface Props extends HTMLMotionProps<"button"> {
   variant?: keyof typeof variants;
   loading?: boolean;
+  children?: ReactNode;
 }
 
 export function Button({ variant = "primary", loading, className = "", children, disabled, ...rest }: Props) {
