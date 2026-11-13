@@ -17,12 +17,9 @@ import type { HackathonDetail, ProblemSummary, TeamWorkspace } from "../../types
 import { Button } from "../../components/Button";
 import { Badge, statusTone } from "../../components/Badge";
 import { Card, Skeleton, ErrorState } from "../../components/States";
-import { Logo } from "../../components/Logo";
-import { useAuth } from "../../context/AuthContext";
 
 export function HackathonDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { role, logout, profile } = useAuth();
 
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
@@ -93,41 +90,7 @@ export function HackathonDetailPage() {
   const isCompleted = hackathon.status === "completed";
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-line bg-white/80 px-6 py-3.5 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/app">
-              <Logo />
-            </Link>
-            <nav className="hidden items-center gap-4 text-sm font-medium text-mute sm:flex">
-              <Link to="/app" className="hover:text-ink">
-                Overview
-              </Link>
-              <Link to="/app/hackathons" className="text-primary font-semibold">
-                Hackathons
-              </Link>
-              <Link to="/app/team" className="hover:text-ink">
-                Team
-              </Link>
-              <Link to="/app/workspace" className="hover:text-ink">
-                Workspace
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-mute sm:inline">
-              {profile?.full_name} ({role})
-            </span>
-            <Button variant="secondary" onClick={() => logout()} className="text-xs">
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <div className="flex-1 bg-canvas text-ink">
       <main className="mx-auto max-w-6xl px-6 py-8">
         {/* Back Link */}
         <div className="mb-6">

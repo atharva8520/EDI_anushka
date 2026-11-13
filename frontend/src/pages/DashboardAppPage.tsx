@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  LogOut,
-  User as UserIcon,
   Compass,
   Users,
   FolderKanban,
@@ -14,14 +12,12 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
 import type { StudentDashboard } from "../types";
-import { Logo } from "../components/Logo";
 import { Button } from "../components/Button";
 import { Badge, statusTone } from "../components/Badge";
 import { Card, Skeleton } from "../components/States";
 
 export function DashboardAppPage() {
-  const { profile, role, logout } = useAuth();
-  const navigate = useNavigate();
+  const { profile, role } = useAuth();
 
   const [dashboardData, setDashboardData] = useState<StudentDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,57 +37,14 @@ export function DashboardAppPage() {
     }
   }
 
-  function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
-  }
-
   const displayName = dashboardData?.greeting_name || profile?.full_name || "Builder";
   const displayEmail = profile?.email || "";
   const displayRole = role || profile?.role || "student";
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 border-b border-line bg-white/80 px-6 py-3.5 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/app">
-              <Logo />
-            </Link>
-            <nav className="hidden items-center gap-4 text-sm font-medium text-mute sm:flex">
-              <Link to="/app" className="text-primary font-semibold">
-                Overview
-              </Link>
-              <Link to="/app/hackathons" className="hover:text-ink">
-                Hackathons
-              </Link>
-              <Link to="/app/team" className="hover:text-ink">
-                Team
-              </Link>
-              <Link to="/app/workspace" className="hover:text-ink">
-                Workspace
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link to="/app/profile">
-              <Button variant="ghost" className="gap-2 text-xs">
-                <UserIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Profile</span>
-              </Button>
-            </Link>
-            <Button variant="secondary" onClick={handleLogout} className="gap-1.5 text-xs">
-              <LogOut className="h-4 w-4 text-mute" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <div className="flex-1 bg-canvas text-ink">
       {/* Main Content */}
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-6 py-8 md:py-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2.5">

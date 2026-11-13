@@ -10,6 +10,9 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { HackathonListPage } from "./pages/hackathons/HackathonListPage";
 import { HackathonDetailPage } from "./pages/hackathons/HackathonDetailPage";
 import { ProblemDetailPage } from "./pages/hackathons/ProblemDetailPage";
+import { AppLayout } from "./components/AppLayout";
+import { ProfilePage } from "./pages/ProfilePage";
+import { AdminComingSoonPage } from "./pages/AdminComingSoonPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth();
@@ -52,7 +55,7 @@ export function App() {
       {/* Public Landing */}
       <Route path="/" element={<LandingPage />} />
 
-      {/* Auth Routes */}
+      {/* Auth Routes (Outside authenticated shell) */}
       <Route
         path="/login"
         element={
@@ -70,72 +73,49 @@ export function App() {
         }
       />
 
-      {/* Protected App Routes */}
+      {/* Authenticated /app Routes (Wrapped in AppLayout) */}
       <Route
         path="/app"
         element={
           <ProtectedRoute>
-            <DashboardAppPage />
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/app/profile"
-        element={
-          <ProtectedRoute>
-            <PlaceholderPage
-              title="Profile & Skills"
-              description="Customize your developer profile, technical proficiencies, portfolio links, and preferred team roles."
-            />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/hackathons"
-        element={
-          <ProtectedRoute>
-            <HackathonListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/hackathons/:id"
-        element={
-          <ProtectedRoute>
-            <HackathonDetailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/hackathons/:id/problems/:problemId"
-        element={
-          <ProtectedRoute>
-            <ProblemDetailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/team"
-        element={
-          <ProtectedRoute>
+      >
+        <Route index element={<DashboardAppPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="hackathons" element={<HackathonListPage />} />
+        <Route path="hackathons/:id" element={<HackathonDetailPage />} />
+        <Route path="hackathons/:id/problems/:problemId" element={<ProblemDetailPage />} />
+        <Route
+          path="team"
+          element={
             <PlaceholderPage
               title="Team Hub"
               description="Form multidisciplinary hackathon teams, manage invite codes, and evaluate skill coverage."
             />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/app/workspace"
-        element={
-          <ProtectedRoute>
+          }
+        />
+        <Route
+          path="invites"
+          element={
             <PlaceholderPage
-              title="Sprint Workspace"
+              title="Team Invites"
+              description="Review incoming team invitations and manage your squad membership requests."
+            />
+          }
+        />
+        <Route
+          path="workspace"
+          element={
+            <PlaceholderPage
+              title="Project Workspace"
               description="Coordinate milestones, problem solutions, submissions, and demo decks with your teammates."
             />
-          </ProtectedRoute>
-        }
-      />
+          }
+        />
+        <Route path="admin" element={<AdminComingSoonPage />} />
+      </Route>
 
       {/* 404 Fallback */}
       <Route path="*" element={<NotFoundPage />} />
