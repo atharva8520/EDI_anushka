@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -80,6 +81,8 @@ def create_team(payload: TeamCreate, user: User = Depends(get_current_user), db:
     hackathon = db.get(Hackathon, payload.hackathon_id)
     if not hackathon or hackathon.status not in {HackathonStatus.published, HackathonStatus.active}:
         raise HTTPException(status_code=400, detail="You can only create teams for published or active hackathons")
+    if date.today() > hackathon.registration_deadline:
+        raise HTTPException(status_code=400, detail="Registration has closed for this hackathon")
     duplicate = db.scalar(select(Team).where(Team.hackathon_id == payload.hackathon_id, Team.name == payload.name))
     if duplicate:
         raise HTTPException(status_code=409, detail="A team with this name already exists in the hackathon")
