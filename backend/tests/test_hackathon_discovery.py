@@ -282,3 +282,152 @@ def test_hackathon_listing_filters_sorting_and_visibility(client):
     assert res_page2.status_code == 200
     assert len(res_page2.json()) == 1
     assert res_page1.json()[0]["id"] != res_page2.json()[0]["id"]
+
+
+def test_student_cannot_fetch_draft_or_archived_hackathon_by_id(client):
+    test_client, db = client
+    create_admin(db)
+    create_student(db, "student@test.dev", "Student")
+
+    admin_headers = auth_header(test_client, "admin@test.dev", "Admin@12345")
+    student_headers = auth_header(test_client, "student@test.dev", "Student@123")
+
+    h_draft = create_test_hackathon(db, name="Draft Hack", status=HackathonStatus.draft)
+    h_arch = create_test_hackathon(db, name="Archived Hack", status=HackathonStatus.archived)
+    h_pub = create_test_hackathon(db, name="Published Hack", status=HackathonStatus.published)
+
+    # Student requests draft -> 404
+    res_draft_stu = test_client.get(f"/api/hackathons/{h_draft.id}", headers=student_headers)
+    assert res_draft_stu.status_code == 404
+    assert res_draft_stu.json()["detail"] == "Hackathon not found"
+
+    # Student requests archived -> 404
+    res_arch_stu = test_client.get(f"/api/hackathons/{h_arch.id}", headers=student_headers)
+    assert res_arch_stu.status_code == 404
+    assert res_arch_stu.json()["detail"] == "Hackathon not found"
+
+    # Unauthenticated student/visitor requests draft -> 404
+    res_draft_anon = test_client.get(f"/api/hackathons/{h_draft.id}")
+    assert res_draft_anon.status_code == 404
+
+    # Student requests published -> 200
+    res_pub_stu = test_client.get(f"/api/hackathons/{h_pub.id}", headers=student_headers)
+    assert res_pub_stu.status_code == 200
+    assert res_pub_stu.json()["id"] == str(h_pub.id)
+
+    # Admin requests draft -> 200
+    res_draft_admin = test_client.get(f"/api/hackathons/{h_draft.id}", headers=admin_headers)
+    assert res_draft_admin.status_code == 200
+    assert res_draft_admin.json()["id"] == str(h_draft.id)
+
+    # Admin requests archived -> 200
+    res_arch_admin = test_client.get(f"/api/hackathons/{h_arch.id}", headers=admin_headers)
+    assert res_arch_admin.status_code == 200
+    assert res_arch_admin.json()["id"] == str(h_arch.id)
+
+
+def test_hackathon_status_filter(client):
+    test_client, db = client
+    create_admin(db)
+    create_student(db, "student@test.dev", "Student")
+
+    admin_headers = auth_header(test_client, "admin@test.dev", "Admin@12345")
+    student_headers = auth_header(test_client, "student@test.dev", "Student@123")
+
+    h_pub = create_test_hackathon(db, name="Pub Event", status=HackathonStatus.published)
+    h_act = create_test_hackathon(db, name="Active Event", status=HackathonStatus.active)
+    h_comp = create_test_hackathon(db, name="Completed Event", status=HackathonStatus.completed)
+    h_draft = create_test_hackathon(db, name="Draft Event", status=HackathonStatus.draft)
+
+    # Filter status=active as student
+    res_act = test_client.get("/api/hackathons?status=active", headers=student_headers)
+    assert res_act.status_code == 200
+    assert len(res_act.json()) == 1
+    assert res_act.json()[0]["id"] == str(h_act.id)
+    assert res_act.headers["X-Total-Count"] == "1"
+
+    # Filter status=published as student
+    res_pub = test_client.get("/api/hackathons?status=published", headers=student_headers)
+    assert res_pub.status_code == 200
+    assert len(res_pub.json()) == 1
+    assert res_pub.json()[0]["id"] == str(h_pub.id)
+    assert res_pub.headers["X-Total-Count"] == "1"
+
+    # Filter status=completed as student
+    res_comp = test_client.get("/api/hackathons?status=completed", headers=student_headers)
+    assert res_comp.status_code == 200
+    assert len(res_comp.json()) == 1
+    assert res_comp.json()[0]["id"] == str(h_comp.id)
+
+    # Student attempts to filter status=draft -> returns empty list and count 0
+    res_draft_stu = test_client.get("/api/hackathons?status=draft", headers=student_headers)
+    assert res_draft_stu.status_code == 200
+    assert res_draft_stu.json() == []
+    assert res_draft_stu.headers["X-Total-Count"] == "0"
+
+    # Admin filters status=draft -> returns draft event
+    res_draft_adm = test_client.get("/api/hackathons?status=draft", headers=admin_headers)
+    assert res_draft_adm.status_code == 200
+    assert any(h["id"] == str(h_draft.id) for h in res_draft_adm.json())
+
+
+def test_pagination_no_duplicates_with_multiple_domains(client):
+    test_client, db = client
+    create_student(db, "student@test.dev", "Student")
+    student_headers = auth_header(test_client, "student@test.dev", "Student@123")
+
+    # Create a hackathon with several domains
+    multi_domain_hack = create_test_hackathon(
+        db,
+        name="OmniDomain Hackathon",
+        status=HackathonStatus.published,
+        domains=["Healthcare", "AI/ML", "Web3", "Cybersecurity", "FinTech"],
+    )
+
+    # Create another hackathon with single domain
+    single_domain_hack = create_test_hackathon(
+        db,
+        name="SingleDomain Hackathon",
+        status=HackathonStatus.published,
+        domains=["Healthcare"],
+    )
+
+    # List hackathons without filters: omni domain hackathon must appear only once
+    res_all = test_client.get("/api/hackathons", headers=student_headers)
+    assert res_all.status_code == 200
+    items = res_all.json()
+    ids = [h["id"] for h in items]
+    assert ids.count(str(multi_domain_hack.id)) == 1
+    assert ids.count(str(single_domain_hack.id)) == 1
+    assert res_all.headers["X-Total-Count"] == str(len(ids))
+
+    # Query with domain filter matching multi-domain hackathon
+    res_domain = test_client.get("/api/hackathons?domain=Healthcare", headers=student_headers)
+    assert res_domain.status_code == 200
+    domain_items = res_domain.json()
+    domain_ids = [h["id"] for h in domain_items]
+    assert domain_ids.count(str(multi_domain_hack.id)) == 1
+    assert domain_ids.count(str(single_domain_hack.id)) == 1
+    assert res_domain.headers["X-Total-Count"] == "2"
+
+    # Search with q matching a domain name in the hackathon
+    res_q_domain = test_client.get("/api/hackathons?q=Web3", headers=student_headers)
+    assert res_q_domain.status_code == 200
+    q_items = res_q_domain.json()
+    q_ids = [h["id"] for h in q_items]
+    assert q_ids.count(str(multi_domain_hack.id)) == 1
+    assert len(q_ids) == 1
+    assert res_q_domain.headers["X-Total-Count"] == "1"
+
+    # Pagination: limit 1, skip 0
+    res_p1 = test_client.get("/api/hackathons?limit=1&skip=0", headers=student_headers)
+    assert res_p1.status_code == 200
+    assert len(res_p1.json()) == 1
+    assert res_p1.headers["X-Total-Count"] == "2"
+
+    res_p2 = test_client.get("/api/hackathons?limit=1&skip=1", headers=student_headers)
+    assert res_p2.status_code == 200
+    assert len(res_p2.json()) == 1
+    assert res_p2.headers["X-Total-Count"] == "2"
+    assert res_p1.json()[0]["id"] != res_p2.json()[0]["id"]
+
