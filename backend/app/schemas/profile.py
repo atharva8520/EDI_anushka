@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 from app.models.profile import Availability, Proficiency
 
@@ -52,6 +52,18 @@ class ProfileUpdate(BaseModel):
     domains: list[str] | None = None
     skills: list[UserSkillIn] | None = None
     previous_projects: list[PreviousProjectIn] | None = None
+
+    @field_validator("github_url", "portfolio_url", mode="before")
+    @classmethod
+    def validate_url(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        if v == "":
+            return ""
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ValueError("URL must start with http:// or https://")
+        return v
 
 
 class ProfileOut(BaseModel):

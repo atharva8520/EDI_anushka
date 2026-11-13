@@ -36,6 +36,41 @@ def get_me(user: User = Depends(get_current_user), db: Session = Depends(get_db)
 @router.put("/users/me", response_model=ProfileOut)
 def update_me(payload: ProfileUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     user = _load_user(db, user.id)
+
+    # 1. Validation before any mutation
+    if payload.skills is not None:
+        skill_ids = [s.skill_id for s in payload.skills]
+        if len(skill_ids) != len(set(skill_ids)):
+            raise HTTPException(status_code=400, detail="Duplicate skills are not allowed")
+        if skill_ids:
+            existing_ids = set(db.scalars(select(Skill.id).where(Skill.id.in_(skill_ids))).all())
+            if len(existing_ids) != len(set(skill_ids)):
+                raise HTTPException(status_code=400, detail="One or more skills do not exist")
+
+    # 2. Prepare deduplicated lists
+    deduped_roles: list[str] | None = None
+    if payload.preferred_roles is not None:
+        seen_roles = set()
+        deduped_roles = []
+        for r in payload.preferred_roles:
+            cleaned = r.strip()
+            key = cleaned.lower()
+            if cleaned and key not in seen_roles:
+                seen_roles.add(key)
+                deduped_roles.append(cleaned)
+
+    deduped_domains: list[str] | None = None
+    if payload.domains is not None:
+        seen_domains = set()
+        deduped_domains = []
+        for d in payload.domains:
+            cleaned = d.strip()
+            key = cleaned.lower()
+            if cleaned and key not in seen_domains:
+                seen_domains.add(key)
+                deduped_domains.append(cleaned)
+
+    # 3. Apply mutations
     if user.profile is None:
         user.profile = Profile()
         db.add(user.profile)
@@ -49,14 +84,14 @@ def update_me(payload: ProfileUpdate, user: User = Depends(get_current_user), db
         if value is not None:
             setattr(user.profile, field, value)
 
-    if payload.preferred_roles is not None:
+    if deduped_roles is not None:
         user.preferred_roles.clear()
         db.flush()
-        user.preferred_roles = [UserPreferredRole(role_name=r) for r in payload.preferred_roles]
-    if payload.domains is not None:
+        user.preferred_roles = [UserPreferredRole(role_name=r) for r in deduped_roles]
+    if deduped_domains is not None:
         user.domains.clear()
         db.flush()
-        user.domains = [UserDomainInterest(domain=d) for d in payload.domains]
+        user.domains = [UserDomainInterest(domain=d) for d in deduped_domains]
     if payload.skills is not None:
         user.skills.clear()
         db.flush()
