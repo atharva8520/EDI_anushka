@@ -7,6 +7,9 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardAppPage } from "./pages/DashboardAppPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { HackathonListPage } from "./pages/hackathons/HackathonListPage";
+import { HackathonDetailPage } from "./pages/hackathons/HackathonDetailPage";
+import { ProblemDetailPage } from "./pages/hackathons/ProblemDetailPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth();
@@ -91,10 +94,23 @@ export function App() {
         path="/app/hackathons"
         element={
           <ProtectedRoute>
-            <PlaceholderPage
-              title="Hackathon Discovery"
-              description="Browse active and upcoming campus hackathons, problem statements, and registration timelines."
-            />
+            <HackathonListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/hackathons/:id"
+        element={
+          <ProtectedRoute>
+            <HackathonDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/hackathons/:id/problems/:problemId"
+        element={
+          <ProtectedRoute>
+            <ProblemDetailPage />
           </ProtectedRoute>
         }
       />
