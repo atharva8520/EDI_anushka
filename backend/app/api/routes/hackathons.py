@@ -1,8 +1,9 @@
+from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import HTTPAuthorizationCredentials
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.deps import bearer, require_admin
@@ -54,39 +55,138 @@ def _get_hackathon(db: Session, hackathon_id: UUID) -> Hackathon:
     return item
 
 
+ALLOWED_SORTS = {
+    "start_date": Hackathon.start_date,
+    "registration_deadline": Hackathon.registration_deadline,
+    "name": Hackathon.name,
+    "created_at": Hackathon.created_at,
+}
+
+
 @router.get("/hackathons", response_model=list[HackathonListItem])
 def list_hackathons(
+    response: Response,
     q: str | None = None,
     domain: str | None = None,
     status: HackathonStatus | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
+    sort_by: str = "start_date",
+    order: str = "desc",
+    skip: int = 0,
+    limit: int = 20,
     db: Session = Depends(get_db),
     user: User | None = Depends(optional_user),
 ):
-    stmt = select(Hackathon).options(*HACKATHON_LOAD)
+    """
+    List hackathons with search, filtering, sorting, and pagination.
+    from_date and to_date filter on hackathon start_date.
+    Total matching count is returned in the X-Total-Count response header.
+    """
+    if sort_by not in ALLOWED_SORTS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid sort_by field '{sort_by}'. Allowed fields: {list(ALLOWED_SORTS.keys())}",
+        )
+    order_norm = order.lower().strip()
+    if order_norm not in {"asc", "desc"}:
+        raise HTTPException(status_code=422, detail="Invalid order. Allowed values: 'asc', 'desc'")
+
+    stmt = select(Hackathon)
     is_admin = user is not None and user.role.value == "admin"
     if not is_admin:
         visible = [HackathonStatus.published, HackathonStatus.active, HackathonStatus.completed]
         if status:
             if status not in visible:
+                response.headers["X-Total-Count"] = "0"
+                response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
                 return []
             stmt = stmt.where(Hackathon.status == status)
         else:
             stmt = stmt.where(Hackathon.status.in_(visible))
     elif status:
         stmt = stmt.where(Hackathon.status == status)
+
     if q:
         like = f"%{q.strip()}%"
+        domain_match = select(1).where(
+            HackathonDomain.hackathon_id == Hackathon.id,
+            HackathonDomain.domain.ilike(like),
+        ).exists()
         stmt = stmt.where(
             or_(
                 Hackathon.name.ilike(like),
                 Hackathon.short_description.ilike(like),
-                HackathonDomain.domain.ilike(like),
+                domain_match,
             )
-        ).join(Hackathon.domains, isouter=True)
+        )
+
     if domain:
-        stmt = stmt.join(Hackathon.domains).where(HackathonDomain.domain.ilike(domain))
-    items = db.scalars(stmt.order_by(Hackathon.start_date.desc())).unique().all()
-    return [serialize_hackathon_list(h) for h in items]
+        stmt = stmt.where(
+            select(1).where(
+                HackathonDomain.hackathon_id == Hackathon.id,
+                HackathonDomain.domain.ilike(domain.strip()),
+            ).exists()
+        )
+
+    if from_date:
+        stmt = stmt.where(Hackathon.start_date >= from_date)
+    if to_date:
+        stmt = stmt.where(Hackathon.start_date <= to_date)
+
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total_count = db.scalar(count_stmt) or 0
+    response.headers["X-Total-Count"] = str(total_count)
+    response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
+
+    sort_col = ALLOWED_SORTS[sort_by]
+    order_expr = sort_col.asc() if order_norm == "asc" else sort_col.desc()
+
+    paged_stmt = (
+        stmt.options(selectinload(Hackathon.domains), selectinload(Hackathon.teams))
+        .order_by(order_expr)
+        .offset(max(skip, 0))
+        .limit(max(limit, 1))
+    )
+    hackathons = db.scalars(paged_stmt).all()
+
+    if hackathons:
+        h_ids = [h.id for h in hackathons]
+        problem_counts_query = (
+            select(HackathonProblem.hackathon_id, func.count(HackathonProblem.id))
+            .where(
+                HackathonProblem.hackathon_id.in_(h_ids),
+                HackathonProblem.is_published == True,
+            )
+            .group_by(HackathonProblem.hackathon_id)
+        )
+        problem_counts_map = dict(db.execute(problem_counts_query).all())
+    else:
+        problem_counts_map = {}
+
+    results: list[HackathonListItem] = []
+    for h in hackathons:
+        results.append(
+            HackathonListItem(
+                id=h.id,
+                name=h.name,
+                slug=h.slug,
+                short_description=h.short_description,
+                banner_url=h.banner_url,
+                organizer=h.organizer,
+                start_date=h.start_date,
+                end_date=h.end_date,
+                registration_deadline=h.registration_deadline,
+                location=h.location,
+                team_size_min=h.team_size_min,
+                team_size_max=h.team_size_max,
+                status=h.status,
+                domains=[d.domain for d in h.domains],
+                problem_count=problem_counts_map.get(h.id, 0),
+                team_count=len(h.teams),
+            )
+        )
+    return results
 
 
 @router.get("/hackathons/{hackathon_id}", response_model=HackathonOut)
