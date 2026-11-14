@@ -396,3 +396,114 @@ export interface AIFeedbackPayload {
   comment?: string | null;
 }
 
+// Module 8: Admin Dashboard Types
+export interface AdminTeamListItem {
+  id: string;
+  name: string;
+  hackathon_id: string;
+  hackathon_name: string;
+  leader_name: string;
+  member_count: number;
+  team_size_min: number;
+  team_size_max: number;
+  is_ready: boolean;
+  selected_problem_title: string | null;
+  has_project: boolean;
+  tasks_total: number;
+  tasks_completed: number;
+  percent_complete: number;
+  created_at: string;
+}
+
+export interface AdminTeamMember {
+  id: string;
+  name: string;
+  college: string | null;
+  member_role: string;
+  joined_at: string;
+  is_leader: boolean;
+}
+
+export interface AdminSelectedProblem {
+  id: string;
+  code: string;
+  title: string;
+  domain: string;
+}
+
+export interface AdminProjectSummary {
+  task_counts: {
+    todo: number;
+    in_progress: number;
+    review: number;
+    completed: number;
+  };
+  percent_complete: number;
+  checklist_percent: number;
+}
+
+export interface AdminTeamDetail {
+  id: string;
+  name: string;
+  hackathon_id: string;
+  hackathon_name: string;
+  leader_name: string;
+  created_at: string;
+  members: AdminTeamMember[];
+  selected_problem: AdminSelectedProblem | null;
+  project_summary: AdminProjectSummary | null;
+}
+
+export interface AdminParticipant {
+  id: string;
+  full_name: string;
+  email: string;
+  college: string | null;
+  branch: string | null;
+  year: string | null;
+  team_name: string | null;
+}
+
+export interface AdminActivityDay {
+  date: string;
+  new_students: number;
+  new_teams: number;
+  tasks_completed: number;
+}
+
+export interface AdminHackathonActivity {
+  id: string;
+  name: string;
+  status: HackathonStatus;
+  team_count: number;
+  participant_count: number;
+  ready_team_count: number;
+  teams_with_problem: number;
+  teams_with_project: number;
+  tasks_total: number;
+  tasks_completed: number;
+}
+
+export interface AdminActivityResponse {
+  days: number;
+  series: AdminActivityDay[];
+  hackathons: AdminHackathonActivity[];
+}
+
+export interface AIFeedbackSummary {
+  total_runs: number;
+  total_feedback: number;
+  positive_feedback: number;
+  negative_feedback: number;
+  satisfaction_rate: number;
+  runs_with_feedback_rate: number;
+  recent_comments?: Array<{
+    id: string;
+    team_name: string;
+    candidate_name: string | null;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+  }>;
+}
+

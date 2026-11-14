@@ -420,34 +420,3 @@ def respond_invite(
 
     db.commit()
     return serialize_team(_load_team(db, invite.team_id), user.id)
-
-
-@router.get("/admin/teams", response_model=list[TeamOut])
-def admin_teams(_: User = Depends(require_admin), db: Session = Depends(get_db)):
-    teams = db.scalars(select(Team).options(*TEAM_LOAD).order_by(Team.created_at.desc())).all()
-    return [serialize_team(t, t.leader_id) for t in teams]
-
-
-@router.get("/admin/participants")
-def admin_participants(_: User = Depends(require_admin), db: Session = Depends(get_db)):
-    users = db.scalars(
-        select(User)
-        .options(selectinload(User.memberships).selectinload(TeamMember.team))
-        .where(User.role == UserRole.student)
-        .order_by(User.created_at.desc())
-    ).all()
-    result = []
-    for u in users:
-        membership = next((m for m in u.memberships if m.status == MemberStatus.active), None)
-        result.append(
-            {
-                "id": str(u.id),
-                "full_name": u.full_name,
-                "email": u.email,
-                "college": u.college,
-                "branch": u.branch,
-                "year": u.year,
-                "team_name": membership.team.name if membership else None,
-            }
-        )
-    return result
