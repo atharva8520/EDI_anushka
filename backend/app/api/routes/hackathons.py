@@ -10,6 +10,7 @@ from app.core.deps import bearer, require_admin
 from app.core.security import decode_token
 from app.database.session import get_db
 from app.models.hackathon import Hackathon, HackathonDomain, HackathonProblem, HackathonStatus, JudgingCriterion
+from app.models.team import MemberStatus, Team
 from app.models.user import User
 from app.schemas.hackathon import (
     HackathonCreate,
@@ -31,8 +32,115 @@ HACKATHON_LOAD = (
     selectinload(Hackathon.domains),
     selectinload(Hackathon.criteria),
     selectinload(Hackathon.problems),
-    selectinload(Hackathon.teams),
+    selectinload(Hackathon.teams).selectinload(Team.members),
 )
+
+
+ALLOWED_TRANSITIONS: dict[HackathonStatus, set[HackathonStatus]] = {
+    HackathonStatus.draft: {HackathonStatus.published, HackathonStatus.archived},
+    HackathonStatus.published: {HackathonStatus.draft, HackathonStatus.active, HackathonStatus.archived},
+    HackathonStatus.active: {HackathonStatus.completed, HackathonStatus.archived},
+    HackathonStatus.completed: {HackathonStatus.archived},
+    HackathonStatus.archived: {HackathonStatus.draft},
+}
+
+
+def validate_status_transition(
+    current_status: HackathonStatus,
+    target_status: HackathonStatus,
+    hackathon: Hackathon,
+    effective_criteria: list | None = None,
+) -> None:
+    if target_status == current_status:
+        return
+
+    allowed = ALLOWED_TRANSITIONS.get(current_status, set())
+    if target_status not in allowed:
+        allowed_str = ", ".join(sorted([s.value for s in allowed]))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot transition from '{current_status.value}' to '{target_status.value}'. Allowed next statuses: {allowed_str}",
+        )
+
+    # Moving to published or active requires criteria weights totalling 100
+    if target_status in {HackathonStatus.published, HackathonStatus.active}:
+        criteria = effective_criteria if effective_criteria is not None else hackathon.criteria
+        total_weight = sum(c.weight if hasattr(c, "weight") else c["weight"] for c in criteria)
+        if total_weight != 100:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Judging criteria weights must total 100, got {total_weight}",
+            )
+
+    # Moving to active additionally requires at least one published problem
+    if target_status == HackathonStatus.active:
+        has_published = any(p.is_published for p in hackathon.problems)
+        if not has_published:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot activate hackathon without at least one published problem",
+            )
+
+    # Published to draft is only allowed if the hackathon has no teams
+    if current_status == HackathonStatus.published and target_status == HackathonStatus.draft:
+        if len(hackathon.teams) > 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot move published hackathon to draft because teams have already registered",
+            )
+
+
+def validate_hackathon_fields(
+    team_size_min: int,
+    team_size_max: int,
+    start_date: date,
+    end_date: date,
+    registration_deadline: date,
+    domains: list[str] | None = None,
+    criteria: list | None = None,
+) -> tuple[list[str] | None, list | None]:
+    if team_size_min > team_size_max:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum team size must be greater than or equal to minimum",
+        )
+    if end_date < start_date:
+        raise HTTPException(
+            status_code=400,
+            detail="End date must be on or after start date",
+        )
+    if registration_deadline > end_date:
+        raise HTTPException(
+            status_code=400,
+            detail="Registration deadline must be on or before end date",
+        )
+
+    cleaned_domains = None
+    if domains is not None:
+        raw_cleaned = [d.strip() for d in domains if d and d.strip()]
+        seen = set()
+        cleaned_domains = []
+        for d in raw_cleaned:
+            low = d.lower()
+            if low not in seen:
+                seen.add(low)
+                cleaned_domains.append(d)
+        if not cleaned_domains:
+            raise HTTPException(status_code=400, detail="At least one valid domain is required")
+
+    cleaned_criteria = None
+    if criteria is not None:
+        if not criteria:
+            raise HTTPException(status_code=400, detail="At least one judging criterion is required")
+        total_weight = sum(c.weight if hasattr(c, "weight") else c["weight"] for c in criteria)
+        if total_weight != 100:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Judging criteria weights must total 100, got {total_weight}",
+            )
+        cleaned_criteria = criteria
+
+    return cleaned_domains, cleaned_criteria
 
 
 def optional_user(
@@ -200,10 +308,21 @@ def get_hackathon(hackathon_id: UUID, db: Session = Depends(get_db), user: User 
 
 @router.post("/hackathons", response_model=HackathonOut, status_code=201)
 def create_hackathon(payload: HackathonCreate, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    if payload.team_size_max < payload.team_size_min:
-        raise HTTPException(status_code=400, detail="Maximum team size must be greater than or equal to minimum")
-    if payload.end_date < payload.start_date:
-        raise HTTPException(status_code=400, detail="End date must be after start date")
+    cleaned_domains, cleaned_criteria = validate_hackathon_fields(
+        team_size_min=payload.team_size_min,
+        team_size_max=payload.team_size_max,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        registration_deadline=payload.registration_deadline,
+        domains=payload.domains,
+        criteria=payload.criteria,
+    )
+    if payload.status == HackathonStatus.active:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot activate hackathon without at least one published problem",
+        )
+
     hackathon = Hackathon(
         name=payload.name,
         slug=unique_slug(db, payload.name),
@@ -220,9 +339,10 @@ def create_hackathon(payload: HackathonCreate, db: Session = Depends(get_db), ad
         rules=payload.rules,
         status=payload.status,
         created_by=admin.id,
-        domains=[HackathonDomain(domain=d) for d in payload.domains],
+        domains=[HackathonDomain(domain=d) for d in (cleaned_domains or [])],
         criteria=[
-            JudgingCriterion(title=c.title, description=c.description, weight=c.weight) for c in payload.criteria
+            JudgingCriterion(title=c.title, description=c.description, weight=c.weight)
+            for c in (cleaned_criteria or [])
         ],
     )
     db.add(hackathon)
@@ -239,23 +359,70 @@ def update_hackathon(
 ):
     item = _get_hackathon(db, hackathon_id)
     data = payload.model_dump(exclude_unset=True)
-    domains = data.pop("domains", None)
-    criteria = data.pop("criteria", None)
+
+    domains_in = data.get("domains")
+    criteria_in = data.get("criteria")
+    target_status = data.get("status")
+
+    # Compute effective values
+    eff_size_min = data.get("team_size_min", item.team_size_min)
+    eff_size_max = data.get("team_size_max", item.team_size_max)
+    eff_start = data.get("start_date", item.start_date)
+    eff_end = data.get("end_date", item.end_date)
+    eff_reg = data.get("registration_deadline", item.registration_deadline)
+
+    # 1. Validate fields on effective values BEFORE changing anything
+    cleaned_domains, cleaned_criteria = validate_hackathon_fields(
+        team_size_min=eff_size_min,
+        team_size_max=eff_size_max,
+        start_date=eff_start,
+        end_date=eff_end,
+        registration_deadline=eff_reg,
+        domains=domains_in,
+        criteria=criteria_in,
+    )
+
+    # 2. Check team size shrinkage protection
+    if "team_size_max" in data:
+        largest_size = 0
+        for t in item.teams:
+            active_m = len([m for m in t.members if m.status == MemberStatus.active])
+            if active_m > largest_size:
+                largest_size = active_m
+        if eff_size_max < largest_size:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Cannot reduce maximum team size to {eff_size_max}. Largest existing team has {largest_size} active members.",
+            )
+
+    # 3. Check status transition if status is being updated
+    if target_status is not None:
+        eff_criteria = cleaned_criteria if cleaned_criteria is not None else item.criteria
+        validate_status_transition(item.status, target_status, item, eff_criteria)
+
+    # ALL validations passed! Apply updates
     name = data.get("name")
     if name and name != item.name:
         item.slug = unique_slug(db, name)
+
+    data.pop("domains", None)
+    data.pop("criteria", None)
     for key, value in data.items():
         setattr(item, key, value)
-    if domains is not None:
+
+    if cleaned_domains is not None:
         item.domains.clear()
         db.flush()
-        item.domains = [HackathonDomain(domain=d) for d in domains]
-    if criteria is not None:
+        item.domains = [HackathonDomain(domain=d) for d in cleaned_domains]
+
+    if cleaned_criteria is not None:
         item.criteria.clear()
         db.flush()
         item.criteria = [
-            JudgingCriterion(title=c["title"], description=c["description"], weight=c["weight"]) for c in criteria
+            JudgingCriterion(title=c["title"], description=c["description"], weight=c["weight"])
+            for c in cleaned_criteria
         ]
+
     db.commit()
     return serialize_hackathon(_get_hackathon(db, hackathon_id))
 
@@ -268,6 +435,7 @@ def set_status(
     _: User = Depends(require_admin),
 ):
     item = _get_hackathon(db, hackathon_id)
+    validate_status_transition(item.status, payload.status, item)
     item.status = payload.status
     db.commit()
     return serialize_hackathon(_get_hackathon(db, hackathon_id))
@@ -300,6 +468,17 @@ def create_problem(
     _: User = Depends(require_admin),
 ):
     _get_hackathon(db, hackathon_id)
+    dup = db.scalar(
+        select(HackathonProblem).where(
+            HackathonProblem.hackathon_id == hackathon_id,
+            func.lower(HackathonProblem.code) == payload.code.strip().lower(),
+        )
+    )
+    if dup:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Problem statement with code '{payload.code}' already exists in this hackathon",
+        )
     problem = HackathonProblem(hackathon_id=hackathon_id, **payload.model_dump())
     db.add(problem)
     db.commit()
@@ -314,10 +493,49 @@ def update_problem(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    problem = db.get(HackathonProblem, problem_id)
+    problem = db.scalar(
+        select(HackathonProblem)
+        .options(
+            selectinload(HackathonProblem.hackathon).selectinload(Hackathon.problems),
+            selectinload(HackathonProblem.selections),
+        )
+        .where(HackathonProblem.id == problem_id)
+    )
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
-    for key, value in payload.model_dump(exclude_unset=True).items():
+
+    data = payload.model_dump(exclude_unset=True)
+    new_code = data.get("code")
+    if new_code and new_code.strip().lower() != problem.code.lower():
+        dup = db.scalar(
+            select(HackathonProblem).where(
+                HackathonProblem.hackathon_id == problem.hackathon_id,
+                HackathonProblem.id != problem.id,
+                func.lower(HackathonProblem.code) == new_code.strip().lower(),
+            )
+        )
+        if dup:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Problem statement with code '{new_code}' already exists in this hackathon",
+            )
+
+    new_is_pub = data.get("is_published")
+    if new_is_pub is False and problem.is_published is True:
+        if problem.selections:
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot unpublish a problem that teams have already selected",
+            )
+        if problem.hackathon and problem.hackathon.status == HackathonStatus.active:
+            other_published = [p for p in problem.hackathon.problems if p.id != problem.id and p.is_published]
+            if not other_published:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Cannot unpublish this problem because it would leave an active hackathon with no published problem",
+                )
+
+    for key, value in data.items():
         setattr(problem, key, value)
     db.commit()
     db.refresh(problem)
@@ -326,10 +544,24 @@ def update_problem(
 
 @router.delete("/problems/{problem_id}", status_code=204)
 def delete_problem(problem_id: UUID, db: Session = Depends(get_db), _: User = Depends(require_admin)):
-    problem = db.get(HackathonProblem, problem_id)
+    problem = db.scalar(
+        select(HackathonProblem)
+        .options(
+            selectinload(HackathonProblem.hackathon).selectinload(Hackathon.problems),
+            selectinload(HackathonProblem.selections),
+        )
+        .where(HackathonProblem.id == problem_id)
+    )
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found")
     if problem.selections:
         raise HTTPException(status_code=409, detail="Cannot delete a problem that teams have already selected")
+    if problem.hackathon and problem.hackathon.status == HackathonStatus.active and problem.is_published:
+        other_published = [p for p in problem.hackathon.problems if p.id != problem.id and p.is_published]
+        if not other_published:
+            raise HTTPException(
+                status_code=409,
+                detail="Cannot delete this problem because it would leave an active hackathon with no published problem",
+            )
     db.delete(problem)
     db.commit()
