@@ -11,6 +11,9 @@ import {
   Users,
   Award,
   Sparkles,
+  LayoutDashboard,
+  FileText,
+  CheckSquare,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -30,13 +33,16 @@ import { Input, TextArea } from "../../components/Field";
 import { Badge } from "../../components/Badge";
 
 import { SummaryCards } from "./SummaryCards";
+import { OverviewTab } from "./OverviewTab";
 import { BoardTab } from "./BoardTab";
 import { ListTab } from "./ListTab";
 import { MilestonesTab } from "./MilestonesTab";
+import { NotesTab } from "./NotesTab";
+import { ChecklistTab } from "./ChecklistTab";
 import { ActivityTab } from "./ActivityTab";
 import { TaskModal } from "./TaskModal";
 
-type ActiveTab = "board" | "list" | "milestones" | "activity";
+type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity";
 
 export function WorkspacePage() {
   const { profile } = useAuth();
@@ -53,7 +59,7 @@ export function WorkspacePage() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   // Navigation tab
-  const [currentTab, setCurrentTab] = useState<ActiveTab>("board");
+  const [currentTab, setCurrentTab] = useState<ActiveTab>("overview");
 
   // Project creation form (for leader when project is not created yet)
   const [customTitle, setCustomTitle] = useState("");
@@ -443,14 +449,24 @@ export function WorkspacePage() {
       <SummaryCards summary={summary} loading={loading} />
 
       {/* Workspace Navigation Tabs */}
-      <div className="flex border-b border-line">
+      <div className="flex border-b border-line overflow-x-auto">
         <button
-          onClick={() => setCurrentTab("board")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "board"
+          onClick={() => setCurrentTab("overview")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "overview"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Overview
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("board")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "board"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
         >
           <Kanban className="h-4 w-4" />
           Kanban Board ({tasks.length})
@@ -458,11 +474,10 @@ export function WorkspacePage() {
 
         <button
           onClick={() => setCurrentTab("list")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "list"
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "list"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
         >
           <ListTodo className="h-4 w-4" />
           List View
@@ -470,23 +485,43 @@ export function WorkspacePage() {
 
         <button
           onClick={() => setCurrentTab("milestones")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "milestones"
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "milestones"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
         >
           <Layers className="h-4 w-4" />
           Milestones ({milestones.length})
         </button>
 
         <button
-          onClick={() => setCurrentTab("activity")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "activity"
+          onClick={() => setCurrentTab("notes")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "notes"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
+        >
+          <FileText className="h-4 w-4" />
+          Notes ({summary?.notes_count ?? 0})
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("checklist")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "checklist"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
+        >
+          <CheckSquare className="h-4 w-4" />
+          Checklist ({summary?.checklist_done ?? 0}/{summary?.checklist_total ?? 0})
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("activity")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "activity"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
         >
           <Activity className="h-4 w-4" />
           Activity Log
@@ -495,6 +530,18 @@ export function WorkspacePage() {
 
       {/* Tab Panels */}
       <div>
+        {currentTab === "overview" && (
+          <OverviewTab
+            project={project}
+            summary={summary}
+            members={activeMembers}
+            hackathonId={teamWorkspace.team.hackathon_id}
+            isLeader={isLeader}
+            isMember={isMember}
+            onProjectUpdated={refreshProjectData}
+          />
+        )}
+
         {currentTab === "board" && (
           <BoardTab
             projectId={project.id}
@@ -530,6 +577,27 @@ export function WorkspacePage() {
             milestones={milestones}
             isLeader={isLeader}
             isMember={isMember}
+            onRefresh={refreshProjectData}
+          />
+        )}
+
+        {currentTab === "notes" && (
+          <NotesTab
+            projectId={project.id}
+            isLeader={isLeader}
+            isMember={isMember}
+            currentUserId={profile?.id || ""}
+            onRefresh={refreshProjectData}
+          />
+        )}
+
+        {currentTab === "checklist" && (
+          <ChecklistTab
+            projectId={project.id}
+            members={activeMembers}
+            isLeader={isLeader}
+            isMember={isMember}
+            currentUserId={profile?.id || ""}
             onRefresh={refreshProjectData}
           />
         )}

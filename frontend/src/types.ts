@@ -219,6 +219,7 @@ export interface Project {
   team_id: string;
   title: string;
   summary: string | null;
+  repo_url: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -295,4 +296,39 @@ export interface ProjectSummary {
   unassigned_count: number;
   workload: MemberWorkload[];
   milestone_progress: MilestoneProgress[];
+  checklist_total: number;
+  checklist_done: number;
+  checklist_percent: number;
+  notes_count: number;
+  repo_url: string | null;
 }
+
+// Module 6: Execution and Collaboration Features
+export interface ProjectNote {
+  id: string;
+  project_id: string;
+  title: string;
+  body: string;
+  created_by: string | null;
+  creator_name: string | null;
+  updated_by: string | null;
+  updater_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  project_id: string;
+  title: string;
+  is_done: boolean;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  url: string | null;
+  position: number;
+  completed_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
