@@ -76,7 +76,7 @@ export function TaskModal({
           milestone_id: milestoneId ? milestoneId : null,
           due_date: dueDate ? dueDate : null,
         };
-        await api.patch(`/api/tasks/${task.id}`, payload);
+        await api.patch(`/tasks/${task.id}`, payload);
       } else {
         // Create task
         const payload = {
@@ -88,7 +88,7 @@ export function TaskModal({
           milestone_id: milestoneId ? milestoneId : null,
           due_date: dueDate ? dueDate : null,
         };
-        await api.post(`/api/projects/${projectId}/tasks`, payload);
+        await api.post(`/projects/${projectId}/tasks`, payload);
       }
       onSaved();
       onClose();

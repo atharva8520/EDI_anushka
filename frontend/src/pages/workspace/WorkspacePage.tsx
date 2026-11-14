@@ -11,6 +11,9 @@ import {
   Users,
   Award,
   Sparkles,
+  LayoutDashboard,
+  FileText,
+  CheckSquare,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -30,13 +33,16 @@ import { Input, TextArea } from "../../components/Field";
 import { Badge } from "../../components/Badge";
 
 import { SummaryCards } from "./SummaryCards";
+import { OverviewTab } from "./OverviewTab";
 import { BoardTab } from "./BoardTab";
 import { ListTab } from "./ListTab";
 import { MilestonesTab } from "./MilestonesTab";
+import { NotesTab } from "./NotesTab";
+import { ChecklistTab } from "./ChecklistTab";
 import { ActivityTab } from "./ActivityTab";
 import { TaskModal } from "./TaskModal";
 
-type ActiveTab = "board" | "list" | "milestones" | "activity";
+type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity";
 
 export function WorkspacePage() {
   const { profile } = useAuth();
@@ -53,7 +59,7 @@ export function WorkspacePage() {
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   // Navigation tab
-  const [currentTab, setCurrentTab] = useState<ActiveTab>("board");
+  const [currentTab, setCurrentTab] = useState<ActiveTab>("overview");
 
   // Project creation form (for leader when project is not created yet)
   const [customTitle, setCustomTitle] = useState("");
@@ -81,7 +87,7 @@ export function WorkspacePage() {
       setActionError(null);
 
       // 1. Fetch team workspace
-      const teamRes = await api.get<TeamWorkspace | null>("/api/teams/mine");
+      const teamRes = await api.get<TeamWorkspace | null>("/teams/mine");
       const tw = teamRes.data;
       setTeamWorkspace(tw);
 
@@ -91,7 +97,7 @@ export function WorkspacePage() {
       }
 
       // 2. Fetch project
-      const projRes = await api.get<Project | null>("/api/projects/mine");
+      const projRes = await api.get<Project | null>("/projects/mine");
       const proj = projRes.data;
       setProject(proj);
 
@@ -101,9 +107,9 @@ export function WorkspacePage() {
 
       // 3. Fetch summary, tasks, and milestones in parallel
       const [sumRes, tasksRes, milesRes] = await Promise.all([
-        api.get<ProjectSummary>(`/api/projects/${proj.id}/summary`),
-        api.get<Task[]>(`/api/projects/${proj.id}/tasks`),
-        api.get<Milestone[]>(`/api/projects/${proj.id}/milestones`),
+        api.get<ProjectSummary>(`/projects/${proj.id}/summary`),
+        api.get<Task[]>(`/projects/${proj.id}/tasks`),
+        api.get<Milestone[]>(`/projects/${proj.id}/milestones`),
       ]);
 
       setSummary(sumRes.data);
@@ -125,9 +131,9 @@ export function WorkspacePage() {
     if (!project) return;
     try {
       const [sumRes, tasksRes, milesRes] = await Promise.all([
-        api.get<ProjectSummary>(`/api/projects/${project.id}/summary`),
-        api.get<Task[]>(`/api/projects/${project.id}/tasks`),
-        api.get<Milestone[]>(`/api/projects/${project.id}/milestones`),
+        api.get<ProjectSummary>(`/projects/${project.id}/summary`),
+        api.get<Task[]>(`/projects/${project.id}/tasks`),
+        api.get<Milestone[]>(`/projects/${project.id}/milestones`),
       ]);
       setSummary(sumRes.data);
       setTasks(tasksRes.data);
@@ -146,7 +152,7 @@ export function WorkspacePage() {
     setActionError(null);
 
     try {
-      await api.post(`/api/teams/${teamWorkspace.team.id}/project`, {
+      await api.post(`/teams/${teamWorkspace.team.id}/project`, {
         title: customTitle.trim() || undefined,
         summary: customSummary.trim() || undefined,
       });
@@ -196,13 +202,13 @@ export function WorkspacePage() {
     });
 
     try {
-      await api.patch(`/api/tasks/${taskId}/move`, {
+      await api.patch(`/tasks/${taskId}/move`, {
         status: targetStatus,
         position: newPosition,
       });
       // Silently re-sync summary
       if (project) {
-        api.get<ProjectSummary>(`/api/projects/${project.id}/summary`).then((res) => {
+        api.get<ProjectSummary>(`/projects/${project.id}/summary`).then((res) => {
           setSummary(res.data);
         });
       }
@@ -219,7 +225,7 @@ export function WorkspacePage() {
     if (!confirm("Are you sure you want to delete this task?")) return;
     try {
       setActionError(null);
-      await api.delete(`/api/tasks/${taskId}`);
+      await api.delete(`/tasks/${taskId}`);
       await refreshProjectData();
     } catch (err) {
       setActionError(apiError(err));
@@ -443,14 +449,24 @@ export function WorkspacePage() {
       <SummaryCards summary={summary} loading={loading} />
 
       {/* Workspace Navigation Tabs */}
-      <div className="flex border-b border-line">
+      <div className="flex border-b border-line overflow-x-auto">
         <button
-          onClick={() => setCurrentTab("board")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "board"
+          onClick={() => setCurrentTab("overview")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "overview"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Overview
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("board")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "board"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
         >
           <Kanban className="h-4 w-4" />
           Kanban Board ({tasks.length})
@@ -458,11 +474,10 @@ export function WorkspacePage() {
 
         <button
           onClick={() => setCurrentTab("list")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "list"
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "list"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
         >
           <ListTodo className="h-4 w-4" />
           List View
@@ -470,23 +485,43 @@ export function WorkspacePage() {
 
         <button
           onClick={() => setCurrentTab("milestones")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "milestones"
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "milestones"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
         >
           <Layers className="h-4 w-4" />
           Milestones ({milestones.length})
         </button>
 
         <button
-          onClick={() => setCurrentTab("activity")}
-          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition ${
-            currentTab === "activity"
+          onClick={() => setCurrentTab("notes")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "notes"
               ? "border-primary text-primary"
               : "border-transparent text-mute hover:text-ink"
-          }`}
+            }`}
+        >
+          <FileText className="h-4 w-4" />
+          Notes ({summary?.notes_count ?? 0})
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("checklist")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "checklist"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
+        >
+          <CheckSquare className="h-4 w-4" />
+          Checklist ({summary?.checklist_done ?? 0}/{summary?.checklist_total ?? 0})
+        </button>
+
+        <button
+          onClick={() => setCurrentTab("activity")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "activity"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
         >
           <Activity className="h-4 w-4" />
           Activity Log
@@ -495,6 +530,18 @@ export function WorkspacePage() {
 
       {/* Tab Panels */}
       <div>
+        {currentTab === "overview" && (
+          <OverviewTab
+            project={project}
+            summary={summary}
+            members={activeMembers}
+            hackathonId={teamWorkspace.team.hackathon_id}
+            isLeader={isLeader}
+            isMember={isMember}
+            onProjectUpdated={refreshProjectData}
+          />
+        )}
+
         {currentTab === "board" && (
           <BoardTab
             projectId={project.id}
@@ -530,6 +577,27 @@ export function WorkspacePage() {
             milestones={milestones}
             isLeader={isLeader}
             isMember={isMember}
+            onRefresh={refreshProjectData}
+          />
+        )}
+
+        {currentTab === "notes" && (
+          <NotesTab
+            projectId={project.id}
+            isLeader={isLeader}
+            isMember={isMember}
+            currentUserId={profile?.id || ""}
+            onRefresh={refreshProjectData}
+          />
+        )}
+
+        {currentTab === "checklist" && (
+          <ChecklistTab
+            projectId={project.id}
+            members={activeMembers}
+            isLeader={isLeader}
+            isMember={isMember}
+            currentUserId={profile?.id || ""}
             onRefresh={refreshProjectData}
           />
         )}

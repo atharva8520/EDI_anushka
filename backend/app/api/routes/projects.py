@@ -1,26 +1,33 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.deps import get_current_user
 from app.database.session import get_db
 from app.models.hackathon import HackathonProblem
-from app.models.project import ActivityLog, Milestone, Project, Task, TaskPriority, TaskStatus
+from app.models.project import ActivityLog, ChecklistItem, Milestone, Project, ProjectNote, Task, TaskPriority, TaskStatus
 from app.models.team import MemberStatus, Team, TeamMember, TeamProblemSelection
 from app.models.user import User, UserRole
 from app.schemas.project import (
     ActivityLogOut,
+    ChecklistItemCreate,
+    ChecklistItemOut,
+    ChecklistItemUpdate,
     MemberWorkload,
     MilestoneCreate,
     MilestoneOut,
     MilestoneProgress,
     MilestoneUpdate,
+    NoteCreate,
+    NoteOut,
+    NoteUpdate,
     ProjectCreate,
     ProjectOut,
     ProjectSummaryOut,
+    ProjectUpdate,
     TaskCreate,
     TaskMove,
     TaskOut,
@@ -37,6 +44,10 @@ PROJECT_LOAD = (
     selectinload(Project.tasks).selectinload(Task.assignee),
     selectinload(Project.tasks).selectinload(Task.creator),
     selectinload(Project.tasks).selectinload(Task.milestone),
+    selectinload(Project.notes).selectinload(ProjectNote.creator),
+    selectinload(Project.notes).selectinload(ProjectNote.updater),
+    selectinload(Project.checklist_items).selectinload(ChecklistItem.assignee),
+    selectinload(Project.checklist_items).selectinload(ChecklistItem.creator),
 )
 
 
@@ -58,11 +69,44 @@ def _serialize_project(project: Project) -> ProjectOut:
         team_id=project.team_id,
         title=project.title,
         summary=project.summary,
+        repo_url=project.repo_url,
         created_by=project.created_by,
         created_at=project.created_at,
         updated_at=project.updated_at,
         team_name=project.team.name,
         problem_title=problem_title,
+    )
+
+
+def _serialize_note(n: ProjectNote) -> NoteOut:
+    return NoteOut(
+        id=n.id,
+        project_id=n.project_id,
+        title=n.title,
+        body=n.body,
+        created_by=n.created_by,
+        creator_name=n.creator.full_name if n.creator else None,
+        updated_by=n.updated_by,
+        updater_name=n.updater.full_name if n.updater else None,
+        created_at=n.created_at,
+        updated_at=n.updated_at,
+    )
+
+
+def _serialize_checklist_item(item: ChecklistItem) -> ChecklistItemOut:
+    return ChecklistItemOut(
+        id=item.id,
+        project_id=item.project_id,
+        title=item.title,
+        is_done=item.is_done,
+        assignee_id=item.assignee_id,
+        assignee_name=item.assignee.full_name if item.assignee else None,
+        url=item.url,
+        position=item.position,
+        completed_at=item.completed_at,
+        created_by=item.created_by,
+        created_at=item.created_at,
+        updated_at=item.updated_at,
     )
 
 
@@ -192,6 +236,54 @@ def get_project(
 ):
     project = _load_project(db, id)
     check_project_access(project, user, write=False)
+    return _serialize_project(project)
+
+
+@router.patch("/projects/{id}", response_model=ProjectOut)
+def update_project(
+    id: UUID,
+    payload: ProjectUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    team, is_leader = check_project_access(project, user, write=True)
+
+    sent_fields = payload.model_dump(exclude_unset=True)
+    if not sent_fields:
+        return _serialize_project(project)
+
+    changes = {}
+
+    if "title" in sent_fields:
+        new_title = payload.title
+        if new_title != project.title:
+            if not is_leader:
+                raise HTTPException(status_code=403, detail="Only the team leader can change the project title")
+            changes["title"] = {"from": project.title, "to": new_title}
+            project.title = new_title
+
+    if "summary" in sent_fields:
+        changes["summary"] = {"from": project.summary, "to": payload.summary}
+        project.summary = payload.summary
+
+    if "repo_url" in sent_fields:
+        changes["repo_url"] = {"from": project.repo_url, "to": payload.repo_url}
+        project.repo_url = payload.repo_url
+
+    if changes:
+        log_activity(
+            db=db,
+            project_id=project.id,
+            actor_id=user.id,
+            action="project_updated",
+            entity_type="project",
+            entity_id=project.id,
+            details={"changes": list(changes.keys()), "actor_name": user.full_name},
+        )
+        db.commit()
+        db.refresh(project)
+
     return _serialize_project(project)
 
 
@@ -667,6 +759,12 @@ def get_project_summary(
             )
         )
 
+    checklist = project.checklist_items or []
+    c_total = len(checklist)
+    c_done = sum(1 for c in checklist if c.is_done)
+    c_percent = int((c_done / c_total) * 100) if c_total > 0 else 0
+    notes_count = len(project.notes or [])
+
     return ProjectSummaryOut(
         total_tasks=total,
         todo_count=todo,
@@ -678,6 +776,11 @@ def get_project_summary(
         unassigned_count=unassigned,
         workload=workload,
         milestone_progress=milestone_progress,
+        checklist_total=c_total,
+        checklist_done=c_done,
+        checklist_percent=c_percent,
+        notes_count=notes_count,
+        repo_url=project.repo_url,
     )
 
 
@@ -716,3 +819,408 @@ def get_project_activity(
         )
         for log in logs
     ]
+
+
+# --- 5. Project Notes (Module 6) ---
+
+@router.get("/projects/{id}/notes", response_model=list[NoteOut])
+def list_project_notes(
+    id: UUID,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=50),
+    q: str | None = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    check_project_access(project, user, write=False)
+
+    stmt = (
+        select(ProjectNote)
+        .options(selectinload(ProjectNote.creator), selectinload(ProjectNote.updater))
+        .where(ProjectNote.project_id == project.id)
+    )
+    if q and q.strip():
+        stmt = stmt.where(ProjectNote.title.ilike(f"%{q.strip()}%"))
+
+    stmt = stmt.order_by(ProjectNote.created_at.desc()).offset(skip).limit(limit)
+    notes = db.scalars(stmt).all()
+    return [_serialize_note(n) for n in notes]
+
+
+@router.post("/projects/{id}/notes", response_model=NoteOut, status_code=201)
+def create_project_note(
+    id: UUID,
+    payload: NoteCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    check_project_access(project, user, write=True)
+
+    note = ProjectNote(
+        project_id=project.id,
+        title=payload.title,
+        body=payload.body,
+        created_by=user.id,
+        updated_by=user.id,
+    )
+    db.add(note)
+    db.flush()
+
+    log_activity(
+        db=db,
+        project_id=project.id,
+        actor_id=user.id,
+        action="note_created",
+        entity_type="note",
+        entity_id=note.id,
+        details={"note_title": note.title, "actor_name": user.full_name},
+    )
+
+    db.commit()
+    db.refresh(note)
+    return _serialize_note(note)
+
+
+@router.get("/notes/{note_id}", response_model=NoteOut)
+def get_note(
+    note_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    note = db.scalar(
+        select(ProjectNote)
+        .options(
+            selectinload(ProjectNote.project).selectinload(Project.team).selectinload(Team.members),
+            selectinload(ProjectNote.creator),
+            selectinload(ProjectNote.updater),
+        )
+        .where(ProjectNote.id == note_id)
+    )
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    check_project_access(note.project, user, write=False)
+    return _serialize_note(note)
+
+
+@router.patch("/notes/{note_id}", response_model=NoteOut)
+def update_note(
+    note_id: UUID,
+    payload: NoteUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    note = db.scalar(
+        select(ProjectNote)
+        .options(
+            selectinload(ProjectNote.project).selectinload(Project.team).selectinload(Team.members),
+            selectinload(ProjectNote.creator),
+            selectinload(ProjectNote.updater),
+        )
+        .where(ProjectNote.id == note_id)
+    )
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    check_project_access(note.project, user, write=True)
+
+    sent_fields = payload.model_dump(exclude_unset=True)
+    if "title" in sent_fields:
+        note.title = payload.title
+    if "body" in sent_fields:
+        note.body = payload.body
+
+    note.updated_by = user.id
+
+    log_activity(
+        db=db,
+        project_id=note.project_id,
+        actor_id=user.id,
+        action="note_updated",
+        entity_type="note",
+        entity_id=note.id,
+        details={"note_title": note.title, "actor_name": user.full_name},
+    )
+
+    db.commit()
+    db.refresh(note)
+    return _serialize_note(note)
+
+
+@router.delete("/notes/{note_id}")
+def delete_note(
+    note_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    note = db.scalar(
+        select(ProjectNote)
+        .options(selectinload(ProjectNote.project).selectinload(Project.team).selectinload(Team.members))
+        .where(ProjectNote.id == note_id)
+    )
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    team, is_leader = check_project_access(note.project, user, write=True)
+    if not (is_leader or note.created_by == user.id):
+        raise HTTPException(status_code=403, detail="Only the author or team leader can delete this note")
+
+    project_id = note.project_id
+    note_title = note.title
+    db.delete(note)
+
+    log_activity(
+        db=db,
+        project_id=project_id,
+        actor_id=user.id,
+        action="note_deleted",
+        entity_type="note",
+        entity_id=note_id,
+        details={"note_title": note_title, "actor_name": user.full_name},
+    )
+
+    db.commit()
+    return {"ok": True}
+
+
+# --- 6. Checklist Items (Module 6) ---
+
+@router.get("/projects/{id}/checklist", response_model=list[ChecklistItemOut])
+def list_checklist_items(
+    id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    check_project_access(project, user, write=False)
+
+    stmt = (
+        select(ChecklistItem)
+        .options(selectinload(ChecklistItem.assignee), selectinload(ChecklistItem.creator))
+        .where(ChecklistItem.project_id == project.id)
+        .order_by(ChecklistItem.position.asc(), ChecklistItem.created_at.asc())
+    )
+    items = db.scalars(stmt).all()
+    return [_serialize_checklist_item(it) for it in items]
+
+
+@router.post("/projects/{id}/checklist", response_model=ChecklistItemOut, status_code=201)
+def create_checklist_item(
+    id: UUID,
+    payload: ChecklistItemCreate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    team, _ = check_project_access(project, user, write=True)
+
+    if payload.assignee_id:
+        is_active = any(m.user_id == payload.assignee_id and m.status == MemberStatus.active for m in team.members)
+        if not is_active:
+            raise HTTPException(status_code=400, detail="Assignee must be an active member of the team")
+
+    max_pos = db.scalar(select(func.max(ChecklistItem.position)).where(ChecklistItem.project_id == project.id))
+    position = 0 if max_pos is None else max_pos + 1
+
+    item = ChecklistItem(
+        project_id=project.id,
+        title=payload.title,
+        is_done=False,
+        assignee_id=payload.assignee_id,
+        url=payload.url,
+        position=position,
+        created_by=user.id,
+    )
+    db.add(item)
+    db.flush()
+
+    log_activity(
+        db=db,
+        project_id=project.id,
+        actor_id=user.id,
+        action="checklist_item_created",
+        entity_type="checklist_item",
+        entity_id=item.id,
+        details={"item_title": item.title, "actor_name": user.full_name},
+    )
+
+    db.commit()
+    db.refresh(item)
+    return _serialize_checklist_item(item)
+
+
+@router.post("/projects/{id}/checklist/defaults", response_model=list[ChecklistItemOut], status_code=201)
+def create_default_checklist(
+    id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    project = _load_project(db, id)
+    check_project_access(project, user, write=True)
+
+    existing_count = db.scalar(select(func.count(ChecklistItem.id)).where(ChecklistItem.project_id == project.id))
+    if existing_count > 0:
+        raise HTTPException(status_code=409, detail="Project already has checklist items")
+
+    default_titles = [
+        "README with setup steps",
+        "Demo video recorded",
+        "Repository link added and public",
+        "Presentation deck ready",
+        "Deployed link or demo environment",
+        "Problem requirements mapped",
+        "Team roles and contributions listed",
+        "Final submission completed",
+    ]
+
+    items = []
+    for idx, title in enumerate(default_titles):
+        it = ChecklistItem(
+            project_id=project.id,
+            title=title,
+            is_done=False,
+            assignee_id=None,
+            url=None,
+            position=idx,
+            created_by=user.id,
+        )
+        db.add(it)
+        items.append(it)
+
+    db.flush()
+
+    for it in items:
+        log_activity(
+            db=db,
+            project_id=project.id,
+            actor_id=user.id,
+            action="checklist_item_created",
+            entity_type="checklist_item",
+            entity_id=it.id,
+            details={"item_title": it.title, "actor_name": user.full_name},
+        )
+
+    db.commit()
+
+    # Query with options for clean serialization
+    stmt = (
+        select(ChecklistItem)
+        .options(selectinload(ChecklistItem.assignee), selectinload(ChecklistItem.creator))
+        .where(ChecklistItem.project_id == project.id)
+        .order_by(ChecklistItem.position.asc())
+    )
+    saved_items = db.scalars(stmt).all()
+    return [_serialize_checklist_item(it) for it in saved_items]
+
+
+@router.patch("/checklist/{item_id}", response_model=ChecklistItemOut)
+def update_checklist_item(
+    item_id: UUID,
+    payload: ChecklistItemUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    item = db.scalar(
+        select(ChecklistItem)
+        .options(
+            selectinload(ChecklistItem.project).selectinload(Project.team).selectinload(Team.members),
+            selectinload(ChecklistItem.assignee),
+            selectinload(ChecklistItem.creator),
+        )
+        .where(ChecklistItem.id == item_id)
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Checklist item not found")
+
+    team, _ = check_project_access(item.project, user, write=True)
+
+    sent_fields = payload.model_dump(exclude_unset=True)
+
+    if "assignee_id" in sent_fields:
+        if payload.assignee_id is not None:
+            is_active = any(m.user_id == payload.assignee_id and m.status == MemberStatus.active for m in team.members)
+            if not is_active:
+                raise HTTPException(status_code=400, detail="Assignee must be an active member of the team")
+            item.assignee_id = payload.assignee_id
+        else:
+            item.assignee_id = None
+
+    if "title" in sent_fields:
+        item.title = payload.title
+
+    if "url" in sent_fields:
+        item.url = payload.url
+
+    toggled = False
+    if "is_done" in sent_fields:
+        if payload.is_done != item.is_done:
+            item.is_done = payload.is_done
+            toggled = True
+            if item.is_done:
+                item.completed_at = datetime.now(timezone.utc)
+            else:
+                item.completed_at = None
+            log_activity(
+                db=db,
+                project_id=item.project_id,
+                actor_id=user.id,
+                action="checklist_item_toggled",
+                entity_type="checklist_item",
+                entity_id=item.id,
+                details={"item_title": item.title, "is_done": item.is_done, "actor_name": user.full_name},
+            )
+
+    other_changes = any(k in sent_fields for k in ("title", "assignee_id", "url"))
+    if other_changes and not toggled:
+        log_activity(
+            db=db,
+            project_id=item.project_id,
+            actor_id=user.id,
+            action="checklist_item_updated",
+            entity_type="checklist_item",
+            entity_id=item.id,
+            details={"item_title": item.title, "actor_name": user.full_name},
+        )
+
+    db.commit()
+    db.refresh(item)
+    return _serialize_checklist_item(item)
+
+
+@router.delete("/checklist/{item_id}")
+def delete_checklist_item(
+    item_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    item = db.scalar(
+        select(ChecklistItem)
+        .options(selectinload(ChecklistItem.project).selectinload(Project.team).selectinload(Team.members))
+        .where(ChecklistItem.id == item_id)
+    )
+    if not item:
+        raise HTTPException(status_code=404, detail="Checklist item not found")
+
+    team, is_leader = check_project_access(item.project, user, write=True)
+    if not (is_leader or item.created_by == user.id):
+        raise HTTPException(status_code=403, detail="Only the creator or team leader can delete this checklist item")
+
+    project_id = item.project_id
+    item_title = item.title
+    db.delete(item)
+
+    log_activity(
+        db=db,
+        project_id=project_id,
+        actor_id=user.id,
+        action="checklist_item_deleted",
+        entity_type="checklist_item",
+        entity_id=item_id,
+        details={"item_title": item_title, "actor_name": user.full_name},
+    )
+
+    db.commit()
+    return {"ok": True}
+

@@ -219,6 +219,7 @@ export interface Project {
   team_id: string;
   title: string;
   summary: string | null;
+  repo_url: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -271,31 +272,63 @@ export interface ActivityLog {
 export interface MemberWorkload {
   user_id: string;
   full_name: string;
-  task_count: number;
-  completed_count: number;
+  open_tasks: number;
+  completed_tasks: number;
 }
 
 export interface MilestoneProgress {
   id: string;
   title: string;
+  due_date: string | null;
   total_tasks: number;
   completed_tasks: number;
-  due_date: string | null;
+  percent_complete: number;
 }
 
 export interface ProjectSummary {
+  total_tasks: number;
+  todo_count: number;
+  in_progress_count: number;
+  review_count: number;
+  completed_count: number;
+  percent_complete: number;
+  overdue_count: number;
+  unassigned_count: number;
+  workload: MemberWorkload[];
+  milestone_progress: MilestoneProgress[];
+  checklist_total: number;
+  checklist_done: number;
+  checklist_percent: number;
+  notes_count: number;
+  repo_url: string | null;
+}
+
+// Module 6: Execution and Collaboration Features
+export interface ProjectNote {
+  id: string;
   project_id: string;
   title: string;
-  summary: string | null;
-  problem_title: string | null;
-  total_tasks: number;
-  completed_tasks: number;
-  todo_tasks: number;
-  in_progress_tasks: number;
-  review_tasks: number;
-  percent_complete: number;
-  overdue_tasks: number;
-  unassigned_count: number;
-  member_workloads: MemberWorkload[];
-  milestones: MilestoneProgress[];
+  body: string;
+  created_by: string | null;
+  creator_name: string | null;
+  updated_by: string | null;
+  updater_name: string | null;
+  created_at: string;
+  updated_at: string;
 }
+
+export interface ChecklistItem {
+  id: string;
+  project_id: string;
+  title: string;
+  is_done: boolean;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  url: string | null;
+  position: number;
+  completed_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+

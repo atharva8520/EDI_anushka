@@ -20,7 +20,7 @@ export function ActivityTab({ projectId }: ActivityTabProps) {
       try {
         setLoading(true);
         setError(null);
-        const res = await api.get<ActivityLog[]>(`/api/projects/${projectId}/activity`);
+        const res = await api.get<ActivityLog[]>(`/projects/${projectId}/activity`);
         if (mounted) {
           setLogs(res.data);
         }
