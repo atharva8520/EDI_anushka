@@ -11,7 +11,13 @@ import { HackathonDetailPage } from "./pages/hackathons/HackathonDetailPage";
 import { ProblemDetailPage } from "./pages/hackathons/ProblemDetailPage";
 import { AppLayout } from "./components/AppLayout";
 import { ProfilePage } from "./pages/ProfilePage";
-import { AdminComingSoonPage } from "./pages/AdminComingSoonPage";
+import { AdminLayout } from "./pages/admin/AdminLayout";
+import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
+import { AdminHackathonsPage } from "./pages/admin/AdminHackathonsPage";
+import { AdminHackathonFormPage } from "./pages/admin/AdminHackathonFormPage";
+import { AdminProblemsPage } from "./pages/admin/AdminProblemsPage";
+import { AdminTeamsPage } from "./pages/admin/AdminTeamsPage";
+import { AdminParticipantsPage } from "./pages/admin/AdminParticipantsPage";
 import { TeamPage } from "./pages/teams/TeamPage";
 import { TeammateSearchPage } from "./pages/teams/TeammateSearchPage";
 import { InvitesPage } from "./pages/teams/InvitesPage";
@@ -94,7 +100,15 @@ export function App() {
         <Route path="team/find" element={<TeammateSearchPage />} />
         <Route path="invites" element={<InvitesPage />} />
         <Route path="workspace" element={<WorkspacePage />} />
-        <Route path="admin" element={<AdminComingSoonPage />} />
+        <Route path="admin" element={<AdminLayout />}>
+          <Route index element={<AdminOverviewPage />} />
+          <Route path="hackathons" element={<AdminHackathonsPage />} />
+          <Route path="hackathons/new" element={<AdminHackathonFormPage />} />
+          <Route path="hackathons/:id/edit" element={<AdminHackathonFormPage />} />
+          <Route path="hackathons/:id/problems" element={<AdminProblemsPage />} />
+          <Route path="teams" element={<AdminTeamsPage />} />
+          <Route path="participants" element={<AdminParticipantsPage />} />
+        </Route>
       </Route>
 
       {/* 404 Fallback */}
