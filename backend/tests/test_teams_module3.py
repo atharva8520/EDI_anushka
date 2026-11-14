@@ -554,3 +554,213 @@ def test_additional_permissions_and_amendments(client):
     assert inv_member_again.status_code == 409
     assert "already belongs to an active team" in inv_member_again.json()["detail"].lower()
 
+
+def test_e2e_module3_walkthrough(client):
+    """
+    Step 3 Walkthrough with accounts:
+    - Seeded leader: aditi@hacknova.dev
+    - Seeded member: rahul@hacknova.dev
+    - Newly registered invitee: invitee@hacknova.dev
+    - Newly registered outsider: outsider@hacknova.dev
+
+    Covers:
+    - Create team
+    - Invite by email and by id
+    - Decline then re-invite
+    - Accept
+    - Join by code
+    - Remove member
+    - Transfer leadership
+    - Leave
+    - Reaching max size
+    - Trying to join a second team
+    - Outsider opening the team
+    - Solo leader leaving deletes the team
+    """
+    test_client, db = client
+
+    # Seeded accounts
+    aditi = create_student(db, "aditi@hacknova.dev", "Aditi Sharma")
+    rahul = create_student(db, "rahul@hacknova.dev", "Rahul Mehta")
+
+    # Newly registered accounts
+    reg_inv = test_client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Invitee Student",
+            "email": "invitee@hacknova.dev",
+            "password": "Student@123",
+            "confirm_password": "Student@123",
+            "college": "COEP",
+            "branch": "IT",
+            "year": "TY",
+        },
+    )
+    assert reg_inv.status_code == 201
+    invitee_token = reg_inv.json()["access_token"]
+    invitee_headers = {"Authorization": f"Bearer {invitee_token}"}
+    invitee_me = test_client.get("/api/users/me", headers=invitee_headers).json()
+    invitee_id = invitee_me["id"]
+
+    reg_out = test_client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Outsider Student",
+            "email": "outsider@hacknova.dev",
+            "password": "Student@123",
+            "confirm_password": "Student@123",
+            "college": "VIT",
+            "branch": "Comp",
+            "year": "SY",
+        },
+    )
+    assert reg_out.status_code == 201
+    outsider_token = reg_out.json()["access_token"]
+    outsider_headers = {"Authorization": f"Bearer {outsider_token}"}
+
+    # Hackathon with max 3 members
+    hackathon = make_hackathon(db)
+    hackathon.team_size_min = 2
+    hackathon.team_size_max = 3
+    db.commit()
+
+    aditi_headers = auth_header(test_client, "aditi@hacknova.dev", "Student@123")
+    rahul_headers = auth_header(test_client, "rahul@hacknova.dev", "Student@123")
+
+    # 1. CREATE: Aditi creates team "Hyper Nova"
+    created = test_client.post(
+        "/api/teams",
+        headers=aditi_headers,
+        json={"hackathon_id": str(hackathon.id), "name": "Hyper Nova", "member_role": "Team Lead"},
+    )
+    assert created.status_code == 201
+    team_data = created.json()
+    team_id = team_data["id"]
+    invite_code = team_data["invite_code"]
+    assert team_data["leader_name"] == "Aditi Sharma"
+    assert team_data["active_member_count"] == 1
+    assert team_data["is_ready"] is False
+    assert team_data["is_full"] is False
+
+    # 2. INVITE BY EMAIL: Aditi invites Rahul by email
+    inv_rahul = test_client.post(
+        f"/api/teams/{team_id}/invites",
+        headers=aditi_headers,
+        json={"email": "rahul@hacknova.dev"},
+    )
+    assert inv_rahul.status_code == 201
+    rahul_invite_id = inv_rahul.json()["id"]
+
+    # 3. DECLINE THEN RE-INVITE: Rahul declines
+    dec = test_client.post(f"/api/invites/{rahul_invite_id}/respond?accept=false", headers=rahul_headers)
+    assert dec.status_code == 200
+
+    # Aditi re-invites Rahul
+    re_inv = test_client.post(
+        f"/api/teams/{team_id}/invites",
+        headers=aditi_headers,
+        json={"email": "rahul@hacknova.dev"},
+    )
+    assert re_inv.status_code == 201
+    assert re_inv.json()["status"] == "pending"
+    re_invite_id = re_inv.json()["id"]
+
+    # 4. ACCEPT: Rahul accepts the re-invitation
+    acc = test_client.post(f"/api/invites/{re_invite_id}/respond?accept=true", headers=rahul_headers)
+    assert acc.status_code == 200
+    t_after_rahul = acc.json()
+    assert t_after_rahul["active_member_count"] == 2
+    assert t_after_rahul["is_ready"] is True  # min=2 reached!
+    assert t_after_rahul["is_full"] is False
+
+    # 5. INVITE BY ID: Aditi invites newly registered invitee by invitee_id
+    inv_by_id = test_client.post(
+        f"/api/teams/{team_id}/invites",
+        headers=aditi_headers,
+        json={"invitee_id": invitee_id},
+    )
+    assert inv_by_id.status_code == 201
+    invitee_invite_id = inv_by_id.json()["id"]
+
+    # Invitee accepts invite -> Team hits max size 3!
+    acc_invitee = test_client.post(f"/api/invites/{invitee_invite_id}/respond?accept=true", headers=invitee_headers)
+    assert acc_invitee.status_code == 200
+    t_full = acc_invitee.json()
+    assert t_full["active_member_count"] == 3
+    assert t_full["is_full"] is True
+
+    # 6. REACHING MAX SIZE: Aditi tries to invite outsider -> 409 full
+    full_inv = test_client.post(
+        f"/api/teams/{team_id}/invites",
+        headers=aditi_headers,
+        json={"email": "outsider@hacknova.dev"},
+    )
+    assert full_inv.status_code == 409
+    assert "maximum size" in full_inv.json()["detail"].lower()
+
+    # 7. TRYING TO JOIN A SECOND TEAM: Rahul tries to join another team via join_team -> 409
+    join_2nd = test_client.post(
+        "/api/teams/join",
+        headers=rahul_headers,
+        json={"invite_code": "ANYCODE1", "member_role": "Member"},
+    )
+    assert join_2nd.status_code == 409
+    assert "already belong" in join_2nd.json()["detail"].lower()
+
+    # 8. OUTSIDER OPENING TEAM: Outsider attempts GET /api/teams/{team_id} -> 403 Forbidden
+    out_view = test_client.get(f"/api/teams/{team_id}", headers=outsider_headers)
+    assert out_view.status_code == 403
+
+    # 9. REMOVE MEMBER: Aditi removes Invitee
+    inv_member = next(m for m in t_full["members"] if m["user_id"] == invitee_id)
+    rem = test_client.post(f"/api/teams/{team_id}/members/{inv_member['id']}/remove", headers=aditi_headers)
+    assert rem.status_code == 200
+    assert rem.json()["active_member_count"] == 2
+    assert rem.json()["is_full"] is False
+
+    # 10. JOIN BY CODE: Invitee joins back via invite_code
+    join_back = test_client.post(
+        "/api/teams/join",
+        headers=invitee_headers,
+        json={"invite_code": invite_code, "member_role": "UI/UX"},
+    )
+    assert join_back.status_code == 200
+    assert join_back.json()["active_member_count"] == 3
+
+    # 11. TRANSFER LEADERSHIP: Aditi transfers leadership to Rahul
+    rahul_member = next(m for m in join_back.json()["members"] if m["user_id"] == str(rahul.id))
+    xfer = test_client.post(
+        f"/api/teams/{team_id}/transfer-leadership",
+        headers=aditi_headers,
+        json={"member_id": rahul_member["id"]},
+    )
+    assert xfer.status_code == 200
+    t_new_lead = xfer.json()
+    assert t_new_lead["leader_id"] == str(rahul.id)
+    assert t_new_lead["leader_name"] == "Rahul Mehta"
+    # Aditi is now a Member
+    aditi_m = next(m for m in t_new_lead["members"] if m["user_id"] == str(aditi.id))
+    assert aditi_m["member_role"] == "Member"
+
+    # 12. LEAVE: Rahul (as new leader) removes Invitee, Aditi leaves
+    inv_m2 = next(m for m in t_new_lead["members"] if m["user_id"] == invitee_id)
+    test_client.post(f"/api/teams/{team_id}/members/{inv_m2['id']}/remove", headers=rahul_headers)
+
+    # Aditi leaves the team
+    aditi_leave = test_client.post(f"/api/teams/{team_id}/leave", headers=aditi_headers)
+    assert aditi_leave.status_code == 200
+
+    # Rahul is now the sole active member. Rahul leaves -> team is deleted!
+    rahul_leave = test_client.post(f"/api/teams/{team_id}/leave", headers=rahul_headers)
+    assert rahul_leave.status_code == 200
+    assert rahul_leave.json().get("deleted") is True
+
+    # Confirm team is gone: cannot be joined with invite_code
+    dead_join = test_client.post(
+        "/api/teams/join",
+        headers=invitee_headers,
+        json={"invite_code": invite_code, "member_role": "Member"},
+    )
+    assert dead_join.status_code in {400, 404}
+
+
