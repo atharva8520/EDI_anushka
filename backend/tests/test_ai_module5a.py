@@ -144,6 +144,14 @@ def test_availability_compatibility_weekdays_vs_weekends(client):
     res_lim = score_candidate(u_lim, ["Backend"], set(), "weekdays")
     assert res_lim["features"]["availability"] == 0.3
 
+    # Team mode flexible, candidate weekdays must give 0.8
+    res_wd_on_flex = score_candidate(u_weekdays, ["Backend"], set(), "flexible")
+    assert res_wd_on_flex["features"]["availability"] == 0.8
+
+    # Team mode weekends, candidate weekdays gives 0.0
+    res_wd_on_we = score_candidate(u_weekdays, ["Backend"], set(), "weekends")
+    assert res_wd_on_we["features"]["availability"] == 0.0
+
 
 # =========================================================================
 # Case 4: Deterministic ordering & filler candidate outranks non-filler
@@ -279,11 +287,16 @@ def test_pending_invite_candidate_marked(client):
     invited = create_student(db, "invited@test.dev", "Invited Student")
     db.add(UserSkill(user_id=invited.id, skill_id=skills["python"].id, proficiency=Proficiency.advanced))
     db.add(TeamInvite(team_id=UUID(team_id), inviter_id=leader.id, invitee_id=invited.id, status=InviteStatus.pending))
+
+    non_invited = create_student(db, "non_invited@test.dev", "Non Invited Student")
+    db.add(UserSkill(user_id=non_invited.id, skill_id=skills["python"].id, proficiency=Proficiency.intermediate))
     db.commit()
 
     rec_res = test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers)
     rec = next(r for r in rec_res.json()["recommendations"] if r["id"] == str(invited.id))
     assert rec["invite_pending"] is True
+    rec_non = next(r for r in rec_res.json()["recommendations"] if r["id"] == str(non_invited.id))
+    assert rec_non["invite_pending"] is False
 
 
 def test_zero_skills_excluded_and_incomplete_counted(client):
