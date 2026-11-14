@@ -9,6 +9,7 @@ from app.core.deps import get_current_user, require_admin
 from app.database.session import get_db
 from app.models.hackathon import Hackathon, HackathonProblem, HackathonStatus
 from app.models.profile import UserSkill
+from app.models.project import Project, Task
 from app.models.team import InviteStatus, MemberStatus, Team, TeamInvite, TeamMember, TeamProblemSelection
 from app.models.user import User, UserRole
 from app.schemas.team import (
@@ -24,6 +25,7 @@ from app.schemas.team import (
     TeamWorkspaceOut,
 )
 from app.services.ids import generate_invite_code
+from app.services.project_service import unassign_member_tasks
 from app.services.serializers import serialize_team
 from app.services.team_service import team_skill_map
 
@@ -36,6 +38,7 @@ TEAM_LOAD = (
     selectinload(Team.members).selectinload(TeamMember.user).selectinload(User.skills).selectinload(UserSkill.skill),
     selectinload(Team.members).selectinload(TeamMember.user).selectinload(User.preferred_roles),
     selectinload(Team.members).selectinload(TeamMember.user).selectinload(User.profile),
+    selectinload(Team.project).selectinload(Project.tasks),
 )
 
 
@@ -163,6 +166,7 @@ def leave_team(team_id: UUID, user: User = Depends(get_current_user), db: Sessio
         return {"ok": True, "deleted": True}
 
     member.status = MemberStatus.left
+    unassign_member_tasks(db, team, user.id, actor_id=user.id)
     db.commit()
     return {"ok": True}
 
@@ -186,6 +190,7 @@ def remove_member(
         raise HTTPException(status_code=400, detail="Cannot remove the team lead")
 
     member.status = MemberStatus.left
+    unassign_member_tasks(db, team, member.user_id, actor_id=user.id)
     db.commit()
     return serialize_team(_load_team(db, team.id), user.id)
 
