@@ -10,6 +10,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Tag,
+  Search,
+  Filter,
 } from "lucide-react";
 import { api } from "../../api/client";
 import { Card, EmptyState, ErrorState } from "../../components/States";
@@ -73,6 +75,10 @@ export function AdminProblemsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [expandedDetails, setExpandedDetails] = useState<Record<string, ProblemDetail>>({});
   const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
+
+  // Search and domain filter state
+  const [problemSearch, setProblemSearch] = useState("");
+  const [domainFilter, setDomainFilter] = useState("all");
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -333,6 +339,39 @@ export function AdminProblemsPage() {
         </div>
       )}
 
+      {/* Filter and Search Bar for Problems */}
+      {problems.length > 0 && (
+        <Card className="p-3">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-mute" />
+              <input
+                type="text"
+                placeholder="Search problem statements by code, title, or keywords..."
+                value={problemSearch}
+                onChange={(e) => setProblemSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs rounded-btn border border-line bg-canvas focus:outline-none focus:border-primary text-ink"
+              />
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="h-3.5 w-3.5 text-mute shrink-0" />
+              <select
+                value={domainFilter}
+                onChange={(e) => setDomainFilter(e.target.value)}
+                className="w-full sm:w-44 py-1.5 px-3 text-xs rounded-btn border border-line bg-canvas focus:outline-none focus:border-primary text-ink"
+              >
+                <option value="all">All Track Domains</option>
+                {hackathon.domains.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Problems List */}
       {problems.length === 0 ? (
         <EmptyState
@@ -344,9 +383,44 @@ export function AdminProblemsPage() {
             </Button>
           }
         />
-      ) : (
-        <div className="space-y-4">
-          {problems.map((prob) => {
+      ) : (() => {
+        const filteredProblems = problems.filter((p) => {
+          if (problemSearch.trim()) {
+            const q = problemSearch.toLowerCase();
+            const matchCode = p.code.toLowerCase().includes(q);
+            const matchTitle = p.title.toLowerCase().includes(q);
+            const matchDesc = p.description.toLowerCase().includes(q);
+            if (!matchCode && !matchTitle && !matchDesc) return false;
+          }
+          if (domainFilter !== "all" && p.domain.toLowerCase() !== domainFilter.toLowerCase()) {
+            return false;
+          }
+          return true;
+        });
+
+        if (filteredProblems.length === 0) {
+          return (
+            <EmptyState
+              title="No matching problem statements"
+              body="No problem statements matched your search criteria."
+              action={
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setProblemSearch("");
+                    setDomainFilter("all");
+                  }}
+                >
+                  Clear Filter
+                </Button>
+              }
+            />
+          );
+        }
+
+        return (
+          <div className="space-y-4">
+            {filteredProblems.map((prob) => {
             const isExpanded = expandedId === prob.id;
             const detail = expandedDetails[prob.id];
 
@@ -460,7 +534,8 @@ export function AdminProblemsPage() {
             );
           })}
         </div>
-      )}
+        );
+      })()}
 
       {/* Add / Edit Problem Modal */}
       <Modal

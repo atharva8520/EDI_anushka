@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Navigate, NavLink, Link, Outlet, useLocation } from "react-router-dom";
 import { ShieldCheck, BarChart3, Compass, Users2, UserCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -72,6 +72,12 @@ export function AdminLayout() {
                 </NavLink>
               );
             })}
+            <Link
+              to="/app/hackathons"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-semibold text-primary hover:bg-canvas transition shrink-0 ml-2 border border-primary/20"
+            >
+              Public Catalog &rarr;
+            </Link>
           </nav>
         </div>
       </div>

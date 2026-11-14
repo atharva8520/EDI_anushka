@@ -11,15 +11,20 @@ import {
   AlertCircle,
   FolderKanban,
   FileText,
+  ShieldCheck,
+  Edit2,
+  FileCode,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import type { HackathonDetail, ProblemSummary, TeamWorkspace } from "../../types";
 import { Button } from "../../components/Button";
 import { Badge, statusTone } from "../../components/Badge";
 import { Card, Skeleton, ErrorState } from "../../components/States";
+import { useAuth } from "../../context/AuthContext";
 
 export function HackathonDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { role } = useAuth();
 
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
@@ -93,13 +98,33 @@ export function HackathonDetailPage() {
     <div className="flex-1 bg-canvas text-ink">
       <main className="mx-auto max-w-6xl px-6 py-8">
         {/* Back Link */}
-        <div className="mb-6">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link
             to="/app/hackathons"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-mute hover:text-ink transition"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Hackathons
           </Link>
+
+          {role === "admin" && (
+            <div className="flex items-center gap-2">
+              <Link to={`/app/admin/hackathons/${hackathon.id}/edit`}>
+                <Button variant="secondary" className="text-xs py-1.5 h-8 gap-1.5">
+                  <Edit2 className="h-3.5 w-3.5 text-mute" /> Edit Hackathon
+                </Button>
+              </Link>
+              <Link to={`/app/admin/hackathons/${hackathon.id}/problems`}>
+                <Button variant="secondary" className="text-xs py-1.5 h-8 gap-1.5">
+                  <FileCode className="h-3.5 w-3.5 text-mute" /> Manage Problems
+                </Button>
+              </Link>
+              <Link to="/app/admin/hackathons">
+                <Button variant="primary" className="text-xs py-1.5 h-8 gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Admin Console
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Hero Card */}

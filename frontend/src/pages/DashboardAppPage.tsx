@@ -8,6 +8,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Calendar,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
@@ -56,13 +57,23 @@ export function DashboardAppPage() {
               </Badge>
             </div>
             <p className="mt-1 text-sm text-mute">
-              {displayEmail ? `${displayEmail} · ` : ""}HackNova student workspace is initialized.
+              {displayEmail ? `${displayEmail} · ` : ""}
+              {displayRole === "admin"
+                ? "HackNova Administrator & Organizer Console."
+                : "HackNova student workspace is initialized."}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
+            {displayRole === "admin" && (
+              <Link to="/app/admin">
+                <Button variant="primary" className="text-xs gap-1.5">
+                  <ShieldCheck className="h-4 w-4" /> Open Admin Console
+                </Button>
+              </Link>
+            )}
             <Link to="/app/hackathons">
-              <Button variant="primary" className="text-xs">
+              <Button variant="secondary" className="text-xs">
                 Explore Hackathons
               </Button>
             </Link>
