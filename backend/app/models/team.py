@@ -89,3 +89,4 @@ class TeamInvite(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     team = relationship("Team", back_populates="invites")
+    invitee = relationship("User", foreign_keys=[invitee_id])

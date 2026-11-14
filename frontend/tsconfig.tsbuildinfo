@@ -1,1 +1,0 @@
-{"root":["./src/types.ts","./src/vite-env.d.ts","./src/api/client.ts","./src/components/badge.tsx","./src/components/button.tsx","./src/components/ecosystemvisual.tsx","./src/components/field.tsx","./src/components/logo.tsx","./src/components/modal.tsx","./src/components/pageintro.tsx","./src/components/states.tsx","./src/context/authcontext.tsx"],"version":"5.9.3"}

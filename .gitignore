@@ -26,3 +26,7 @@ backend/.venv/
 uploads/
 faiss_index/
 *.sqlite3
+
+*.tsbuildinfo
+
+*.tsbuildinfo

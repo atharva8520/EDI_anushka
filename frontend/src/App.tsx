@@ -13,6 +13,9 @@ import { ProblemDetailPage } from "./pages/hackathons/ProblemDetailPage";
 import { AppLayout } from "./components/AppLayout";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminComingSoonPage } from "./pages/AdminComingSoonPage";
+import { TeamPage } from "./pages/teams/TeamPage";
+import { TeammateSearchPage } from "./pages/teams/TeammateSearchPage";
+import { InvitesPage } from "./pages/teams/InvitesPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth();
@@ -87,24 +90,9 @@ export function App() {
         <Route path="hackathons" element={<HackathonListPage />} />
         <Route path="hackathons/:id" element={<HackathonDetailPage />} />
         <Route path="hackathons/:id/problems/:problemId" element={<ProblemDetailPage />} />
-        <Route
-          path="team"
-          element={
-            <PlaceholderPage
-              title="Team Hub"
-              description="Form multidisciplinary hackathon teams, manage invite codes, and evaluate skill coverage."
-            />
-          }
-        />
-        <Route
-          path="invites"
-          element={
-            <PlaceholderPage
-              title="Team Invites"
-              description="Review incoming team invitations and manage your squad membership requests."
-            />
-          }
-        />
+        <Route path="team" element={<TeamPage />} />
+        <Route path="team/find" element={<TeammateSearchPage />} />
+        <Route path="invites" element={<InvitesPage />} />
         <Route
           path="workspace"
           element={

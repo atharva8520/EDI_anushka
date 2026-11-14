@@ -1,8 +1,8 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.deps import get_current_user, require_admin
@@ -17,8 +17,10 @@ from app.schemas.team import (
     MemberRoleUpdate,
     ProblemSelect,
     TeamCreate,
+    TeamInviteLeaderOut,
     TeamJoin,
     TeamOut,
+    TeamTransferLeadership,
     TeamWorkspaceOut,
 )
 from app.services.ids import generate_invite_code
@@ -44,8 +46,8 @@ def _load_team(db: Session, team_id: UUID) -> Team:
     return team
 
 
-def _active_membership(user: User) -> TeamMember | None:
-    return next((m for m in user.memberships if m.status == MemberStatus.active), None)
+def _has_active_leader(team: Team) -> bool:
+    return any(m.user_id == team.leader_id and m.status == MemberStatus.active for m in team.members)
 
 
 @router.get("/teams/mine", response_model=TeamWorkspaceOut | None)
@@ -83,12 +85,20 @@ def create_team(payload: TeamCreate, user: User = Depends(get_current_user), db:
         raise HTTPException(status_code=400, detail="You can only create teams for published or active hackathons")
     if date.today() > hackathon.registration_deadline:
         raise HTTPException(status_code=400, detail="Registration has closed for this hackathon")
-    duplicate = db.scalar(select(Team).where(Team.hackathon_id == payload.hackathon_id, Team.name == payload.name))
+
+    clean_name = payload.name.strip()
+    if len(clean_name) < 2:
+        raise HTTPException(status_code=422, detail="Team name must be at least 2 characters")
+
+    duplicate = db.scalar(
+        select(Team).where(Team.hackathon_id == payload.hackathon_id, func.lower(Team.name) == clean_name.lower())
+    )
     if duplicate:
         raise HTTPException(status_code=409, detail="A team with this name already exists in the hackathon")
+
     team = Team(
         hackathon_id=payload.hackathon_id,
-        name=payload.name.strip(),
+        name=clean_name,
         invite_code=generate_invite_code(db),
         leader_id=user.id,
         members=[TeamMember(user_id=user.id, member_role=payload.member_role, status=MemberStatus.active)],
@@ -107,12 +117,21 @@ def join_team(payload: TeamJoin, user: User = Depends(get_current_user), db: Ses
     )
     if existing:
         raise HTTPException(status_code=409, detail="You already belong to a team")
+
     team = db.scalar(select(Team).options(*TEAM_LOAD).where(Team.invite_code == payload.invite_code.upper()))
     if not team:
         raise HTTPException(status_code=404, detail="Invite code is not valid")
+
+    if team.hackathon.status not in {HackathonStatus.published, HackathonStatus.active}:
+        raise HTTPException(status_code=400, detail="You can only join teams for published or active hackathons")
+
+    if not _has_active_leader(team):
+        raise HTTPException(status_code=400, detail="This team is no longer active")
+
     active_count = len([m for m in team.members if m.status == MemberStatus.active])
     if active_count >= team.hackathon.team_size_max:
         raise HTTPException(status_code=409, detail="This team is already at maximum size")
+
     leftover = next((m for m in team.members if m.user_id == user.id), None)
     if leftover:
         leftover.status = MemberStatus.active
@@ -129,16 +148,74 @@ def leave_team(team_id: UUID, user: User = Depends(get_current_user), db: Sessio
     member = next((m for m in team.members if m.user_id == user.id and m.status == MemberStatus.active), None)
     if not member:
         raise HTTPException(status_code=404, detail="You are not in this team")
+
+    active_members = [m for m in team.members if m.status == MemberStatus.active]
     if team.leader_id == user.id:
-        others = [m for m in team.members if m.user_id != user.id and m.status == MemberStatus.active]
+        others = [m for m in active_members if m.user_id != user.id]
         if others:
             raise HTTPException(
                 status_code=409,
                 detail="Transfer leadership or wait until other members leave before leaving as team lead",
             )
+        # Leader leaving as the last active member: delete the team
+        db.delete(team)
+        db.commit()
+        return {"ok": True, "deleted": True}
+
     member.status = MemberStatus.left
     db.commit()
     return {"ok": True}
+
+
+@router.post("/teams/{team_id}/members/{member_id}/remove", response_model=TeamOut)
+def remove_member(
+    team_id: UUID,
+    member_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    team = _load_team(db, team_id)
+    if team.leader_id != user.id:
+        raise HTTPException(status_code=403, detail="Only the team lead can remove members")
+
+    member = next((m for m in team.members if m.id == member_id and m.status == MemberStatus.active), None)
+    if not member:
+        raise HTTPException(status_code=404, detail="Active member not found")
+
+    if member.user_id == team.leader_id:
+        raise HTTPException(status_code=400, detail="Cannot remove the team lead")
+
+    member.status = MemberStatus.left
+    db.commit()
+    return serialize_team(_load_team(db, team.id), user.id)
+
+
+@router.post("/teams/{team_id}/transfer-leadership", response_model=TeamOut)
+def transfer_leadership(
+    team_id: UUID,
+    payload: TeamTransferLeadership,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    team = _load_team(db, team_id)
+    if team.leader_id != user.id:
+        raise HTTPException(status_code=403, detail="Only the team lead can transfer leadership")
+
+    target = next((m for m in team.members if m.id == payload.member_id and m.status == MemberStatus.active), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="Active member not found")
+
+    if target.user_id == user.id:
+        raise HTTPException(status_code=400, detail="You are already the team lead")
+
+    old_leader_mem = next((m for m in team.members if m.user_id == user.id and m.status == MemberStatus.active), None)
+    if old_leader_mem and old_leader_mem.member_role == "Team Lead":
+        old_leader_mem.member_role = "Member"
+
+    target.member_role = "Team Lead"
+    team.leader_id = target.user_id
+    db.commit()
+    return serialize_team(_load_team(db, team.id), user.id)
 
 
 @router.post("/teams/{team_id}/members/{member_id}/role", response_model=TeamOut)
@@ -152,7 +229,7 @@ def update_role(
     team = _load_team(db, team_id)
     if team.leader_id != user.id:
         raise HTTPException(status_code=403, detail="Only the team lead can update roles")
-    member = next((m for m in team.members if m.id == member_id), None)
+    member = next((m for m in team.members if m.id == member_id and m.status == MemberStatus.active), None)
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
     member.member_role = payload.member_role
@@ -192,26 +269,86 @@ def invite_member(
     team = _load_team(db, team_id)
     if team.leader_id != user.id:
         raise HTTPException(status_code=403, detail="Only the team lead can invite members")
-    invitee = db.scalar(select(User).where(User.email == payload.email.lower(), User.role == UserRole.student))
-    if not invitee:
-        raise HTTPException(status_code=404, detail="No student account found with that email")
+
+    if team.hackathon.status not in {HackathonStatus.published, HackathonStatus.active}:
+        raise HTTPException(status_code=400, detail="Team hackathon is not accepting new members")
+
+    active_count = len([m for m in team.members if m.status == MemberStatus.active])
+    if active_count >= team.hackathon.team_size_max:
+        raise HTTPException(status_code=409, detail="This team is already at maximum size")
+
+    if payload.invitee_id is not None:
+        invitee = db.get(User, payload.invitee_id)
+        if not invitee or invitee.role != UserRole.student:
+            raise HTTPException(status_code=404, detail="No student account found with that id")
+    else:
+        invitee = db.scalar(select(User).where(User.email == payload.email.lower(), User.role == UserRole.student))
+        if not invitee:
+            raise HTTPException(status_code=404, detail="No student account found with that email")
+
     if invitee.id == user.id:
         raise HTTPException(status_code=400, detail="You are already on the team")
+
     already = any(m.user_id == invitee.id and m.status == MemberStatus.active for m in team.members)
     if already:
         raise HTTPException(status_code=409, detail="That student is already on the team")
+
+    other_team_member = db.scalar(
+        select(TeamMember).where(TeamMember.user_id == invitee.id, TeamMember.status == MemberStatus.active)
+    )
+    if other_team_member:
+        raise HTTPException(status_code=409, detail="That student already belongs to an active team")
+
     existing = db.scalar(
         select(TeamInvite).where(
-            TeamInvite.team_id == team.id, TeamInvite.invitee_id == invitee.id, TeamInvite.status == InviteStatus.pending
+            TeamInvite.team_id == team.id,
+            TeamInvite.invitee_id == invitee.id,
         )
     )
     if existing:
-        return {"id": str(existing.id), "status": existing.status.value}
+        if existing.status == InviteStatus.pending:
+            return {"id": str(existing.id), "status": existing.status.value, "invite_code": team.invite_code}
+        existing.status = InviteStatus.pending
+        existing.inviter_id = user.id
+        existing.created_at = datetime.now(timezone.utc)
+        db.commit()
+        return {"id": str(existing.id), "status": existing.status.value, "invite_code": team.invite_code}
+
     invite = TeamInvite(team_id=team.id, inviter_id=user.id, invitee_id=invitee.id)
     db.add(invite)
     db.commit()
     db.refresh(invite)
     return {"id": str(invite.id), "status": invite.status.value, "invite_code": team.invite_code}
+
+
+@router.get("/teams/{team_id}/invites", response_model=list[TeamInviteLeaderOut])
+def list_team_invites(
+    team_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    team = _load_team(db, team_id)
+    if team.leader_id != user.id:
+        raise HTTPException(status_code=403, detail="Only the team lead can view team invites")
+
+    invites = db.scalars(
+        select(TeamInvite)
+        .options(selectinload(TeamInvite.invitee))
+        .where(TeamInvite.team_id == team.id, TeamInvite.status == InviteStatus.pending)
+        .order_by(TeamInvite.created_at.desc())
+    ).all()
+
+    return [
+        TeamInviteLeaderOut(
+            id=i.id,
+            team_id=i.team_id,
+            invitee_id=i.invitee_id,
+            invitee_name=i.invitee.full_name,
+            status=i.status,
+            created_at=i.created_at,
+        )
+        for i in invites
+    ]
 
 
 @router.get("/invites", response_model=list[InviteOut])
@@ -220,6 +357,7 @@ def my_invites(user: User = Depends(get_current_user), db: Session = Depends(get
         select(TeamInvite)
         .options(selectinload(TeamInvite.team).selectinload(Team.hackathon))
         .where(TeamInvite.invitee_id == user.id, TeamInvite.status == InviteStatus.pending)
+        .order_by(TeamInvite.created_at.desc())
     ).all()
     return [
         InviteOut(
@@ -235,23 +373,46 @@ def my_invites(user: User = Depends(get_current_user), db: Session = Depends(get
 
 
 @router.post("/invites/{invite_id}/respond", response_model=TeamOut | None)
-def respond_invite(invite_id: UUID, accept: bool = True, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def respond_invite(
+    invite_id: UUID,
+    accept: bool = True,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     invite = db.get(TeamInvite, invite_id)
     if not invite or invite.invitee_id != user.id:
         raise HTTPException(status_code=404, detail="Invite not found")
     if invite.status != InviteStatus.pending:
         raise HTTPException(status_code=409, detail="Invite already resolved")
+
     if not accept:
         invite.status = InviteStatus.declined
         db.commit()
         return None
+
+    team = _load_team(db, invite.team_id)
+
+    if not _has_active_leader(team):
+        raise HTTPException(status_code=400, detail="This team is no longer active")
+
+    active_count = len([m for m in team.members if m.status == MemberStatus.active])
+    if active_count >= team.hackathon.team_size_max:
+        raise HTTPException(status_code=409, detail="This team is already at maximum size")
+
     existing = db.scalar(
         select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
     )
     if existing:
         raise HTTPException(status_code=409, detail="Leave your current team before accepting another invite")
+
     invite.status = InviteStatus.accepted
-    db.add(TeamMember(team_id=invite.team_id, user_id=user.id, member_role="Member", status=MemberStatus.active))
+    leftover = next((m for m in team.members if m.user_id == user.id), None)
+    if leftover:
+        leftover.status = MemberStatus.active
+        leftover.member_role = "Member"
+    else:
+        db.add(TeamMember(team_id=invite.team_id, user_id=user.id, member_role="Member", status=MemberStatus.active))
+
     db.commit()
     return serialize_team(_load_team(db, invite.team_id), user.id)
 

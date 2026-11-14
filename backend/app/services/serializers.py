@@ -97,9 +97,12 @@ def serialize_problem_summary(p) -> ProblemSummary:
 
 def serialize_team(team: Team, current_user_id) -> TeamOut:
     members = []
+    active_count = 0
     for m in team.members:
         if m.status == MemberStatus.left:
             continue
+        if m.status == MemberStatus.active:
+            active_count += 1
         user = m.user
         members.append(
             MemberOut(
@@ -134,16 +137,23 @@ def serialize_team(team: Team, current_user_id) -> TeamOut:
             description=p.description,
             selected_at=team.problem_selection.selected_at,
         )
+    min_size = team.hackathon.team_size_min if team.hackathon else 2
+    max_size = team.hackathon.team_size_max if team.hackathon else 4
     return TeamOut(
         id=team.id,
         name=team.name,
         invite_code=team.invite_code,
         hackathon_id=team.hackathon_id,
-        hackathon_name=team.hackathon.name,
+        hackathon_name=team.hackathon.name if team.hackathon else "",
         leader_id=team.leader_id,
-        leader_name=team.leader.full_name,
+        leader_name=team.leader.full_name if team.leader else "",
         members=members,
         selected_problem=selected,
         created_at=team.created_at,
         is_leader=team.leader_id == current_user_id,
+        active_member_count=active_count,
+        team_size_min=min_size,
+        team_size_max=max_size,
+        is_ready=active_count >= min_size,
+        is_full=active_count >= max_size,
     )
