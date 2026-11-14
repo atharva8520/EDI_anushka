@@ -65,7 +65,7 @@ def log_activity(
 
 def unassign_member_tasks(db: Session, team: Team, user_id: UUID, actor_id: UUID | None = None) -> list[Task]:
     """
-    When a member leaves or is removed, unassign all their tasks and log it.
+    When a member leaves or is removed, unassign all their tasks and checklist items, and log it.
     Shared helper called from leave_team and remove_member.
     """
     if not team.project:
@@ -89,6 +89,24 @@ def unassign_member_tasks(db: Session, team: Team, user_id: UUID, actor_id: UUID
                     "reason": "member_left",
                 },
             )
+
+    for item in getattr(team.project, "checklist_items", []):
+        if item.assignee_id == user_id:
+            item.assignee_id = None
+            log_activity(
+                db=db,
+                project_id=team.project.id,
+                actor_id=actor_id,
+                action="checklist_item_unassigned",
+                entity_type="checklist_item",
+                entity_id=item.id,
+                details={
+                    "item_title": item.title,
+                    "unassigned_user_id": str(user_id),
+                    "reason": "member_left",
+                },
+            )
+
     return unassigned_tasks
 
 
