@@ -124,3 +124,134 @@ def test_dashboard_uses_real_profile_state(client):
     body = dash.json()
     assert body["next_action"]["href"] == "/app/profile"
     assert body["profile_completion"] < 80
+
+
+def test_profile_update_and_edge_cases(client):
+    from app.models.skill import Skill
+    import uuid
+    test_client, db = client
+    create_student(db, "updater@test.dev", "Original Name")
+    skill1 = Skill(name="Python", category="Backend")
+    db.add(skill1)
+    db.commit()
+    db.refresh(skill1)
+
+    headers = auth_header(test_client, "updater@test.dev", "Student@123")
+
+    # 1. Successful update with valid fields
+    res = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={
+            "full_name": "Updated Name",
+            "college": "COEP",
+            "branch": "CSE",
+            "year": "Final Year",
+            "bio": "Passionate developer",
+            "github_url": "https://github.com/updated",
+            "portfolio_url": "http://portfolio.dev",
+            "availability": "flexible",
+            "hackathon_experience": "2 hackathons",
+            "preferred_roles": ["Backend", "AI/ML"],
+            "domains": ["Healthcare", "Civic Tech"],
+            "skills": [{"skill_id": str(skill1.id), "proficiency": "advanced"}],
+            "previous_projects": [
+                {
+                    "title": "Project Alpha",
+                    "description": "A cool project",
+                    "tech_stack": "Python, React",
+                    "year": 2024,
+                }
+            ],
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["full_name"] == "Updated Name"
+    assert data["college"] == "COEP"
+    assert data["github_url"] == "https://github.com/updated"
+    assert data["portfolio_url"] == "http://portfolio.dev"
+    assert len(data["skills"]) == 1
+    assert data["completion_percent"] > 50
+
+    # 2. Invalid availability -> 422
+    inv_avail = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={"availability": "anytime"},
+    )
+    assert inv_avail.status_code == 422
+
+    # 3. Invalid URLs -> 422
+    bad_gh = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={"github_url": "github.com/missing-protocol"},
+    )
+    assert bad_gh.status_code == 422
+
+    bad_port = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={"portfolio_url": "ftp://bad-protocol"},
+    )
+    assert bad_port.status_code == 422
+
+    # 4. Empty string URL -> 200 clears URL
+    clear_url = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={"github_url": "", "portfolio_url": ""},
+    )
+    assert clear_url.status_code == 200
+    assert clear_url.json()["github_url"] == "" or clear_url.json()["github_url"] is None
+
+    # 5. Duplicate skill_id -> 400
+    dup_res = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={
+            "full_name": "Should Not Change",
+            "skills": [
+                {"skill_id": str(skill1.id), "proficiency": "beginner"},
+                {"skill_id": str(skill1.id), "proficiency": "advanced"},
+            ],
+        },
+    )
+    assert dup_res.status_code == 400
+    assert "duplicate" in dup_res.json()["detail"].lower()
+
+    # 6. Unknown skill_id -> 400
+    unknown_res = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={
+            "full_name": "Should Not Change",
+            "skills": [
+                {"skill_id": str(uuid.uuid4()), "proficiency": "beginner"}
+            ],
+        },
+    )
+    assert unknown_res.status_code == 400
+    assert "not exist" in unknown_res.json()["detail"].lower()
+
+    # 7. Confirm rejected requests left existing profile unchanged
+    me_res = test_client.get("/api/users/me", headers=headers)
+    assert me_res.status_code == 200
+    assert me_res.json()["full_name"] == "Updated Name"
+
+    # 8. Duplicate preferred roles and domains (repeats with whitespace & casing) -> 200 and deduplicated
+    dedup_res = test_client.put(
+        "/api/users/me",
+        headers=headers,
+        json={
+            "preferred_roles": ["Backend", "backend", " Backend ", "AI/ML"],
+            "domains": ["Healthcare", "healthcare", " Healthcare ", "FinTech"],
+        },
+    )
+    assert dedup_res.status_code == 200
+    assert dedup_res.json()["preferred_roles"] == ["Backend", "AI/ML"]
+    assert dedup_res.json()["domains"] == ["Healthcare", "FinTech"]
+
+
+
