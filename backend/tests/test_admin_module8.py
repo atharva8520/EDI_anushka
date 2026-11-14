@@ -515,7 +515,8 @@ def test_admin_teams_filtering_pagination_and_query_count(client):
     db.add(prob)
     db.flush()
 
-    # Create 5 teams
+    # Create 5 teams with explicit distinct created_at values so ordering is deterministic
+    base_time = datetime(2026, 6, 1, 10, 0, 0, tzinfo=timezone.utc)
     teams = []
     for i in range(5):
         leader = create_student(db, f"lead_tlist_{i}@test.dev", f"Leader {i}")
@@ -524,6 +525,7 @@ def test_admin_teams_filtering_pagination_and_query_count(client):
             name=f"Squad Alpha {i}",
             leader_id=leader.id,
             invite_code=f"ALPH{i:02d}",
+            created_at=base_time + timedelta(minutes=i),
         )
         db.add(t)
         db.flush()

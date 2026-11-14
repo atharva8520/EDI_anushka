@@ -102,7 +102,7 @@ def search_students(
             selectinload(User.preferred_roles),
             selectinload(User.domains),
         )
-        .order_by(User.full_name.asc())
+        .order_by(User.full_name.asc(), User.id.asc())
         .offset(skip)
         .limit(limit)
     )

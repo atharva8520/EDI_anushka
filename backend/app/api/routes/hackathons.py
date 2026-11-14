@@ -249,10 +249,11 @@ def list_hackathons(
 
     sort_col = ALLOWED_SORTS[sort_by]
     order_expr = sort_col.asc() if order_norm == "asc" else sort_col.desc()
+    id_order = Hackathon.id.asc() if order_norm == "asc" else Hackathon.id.desc()
 
     paged_stmt = (
         stmt.options(selectinload(Hackathon.domains), selectinload(Hackathon.teams))
-        .order_by(order_expr)
+        .order_by(order_expr, id_order)
         .offset(max(skip, 0))
         .limit(max(limit, 1))
     )

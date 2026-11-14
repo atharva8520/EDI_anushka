@@ -340,7 +340,7 @@ def list_team_invites(
         select(TeamInvite)
         .options(selectinload(TeamInvite.invitee))
         .where(TeamInvite.team_id == team.id, TeamInvite.status == InviteStatus.pending)
-        .order_by(TeamInvite.created_at.desc())
+        .order_by(TeamInvite.created_at.desc(), TeamInvite.id.desc())
     ).all()
 
     return [
@@ -362,7 +362,7 @@ def my_invites(user: User = Depends(get_current_user), db: Session = Depends(get
         select(TeamInvite)
         .options(selectinload(TeamInvite.team).selectinload(Team.hackathon))
         .where(TeamInvite.invitee_id == user.id, TeamInvite.status == InviteStatus.pending)
-        .order_by(TeamInvite.created_at.desc())
+        .order_by(TeamInvite.created_at.desc(), TeamInvite.id.desc())
     ).all()
     return [
         InviteOut(

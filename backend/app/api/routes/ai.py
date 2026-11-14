@@ -354,7 +354,7 @@ def get_feedback_summary(
 ) -> FeedbackSummaryOut:
     total_runs = db.scalar(select(func.count(AIRun.id))) or 0
     feedbacks = db.scalars(
-        select(AIFeedback).options(joinedload(AIFeedback.run)).order_by(AIFeedback.created_at.desc())
+        select(AIFeedback).options(joinedload(AIFeedback.run)).order_by(AIFeedback.created_at.desc(), AIFeedback.id.desc())
     ).all()
 
     total_feedback = len(feedbacks)

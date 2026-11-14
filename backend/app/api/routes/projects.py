@@ -316,7 +316,7 @@ def list_tasks(
     if q and q.strip():
         stmt = stmt.where(Task.title.ilike(f"%{q.strip()}%"))
 
-    stmt = stmt.order_by(Task.status.asc(), Task.position.asc())
+    stmt = stmt.order_by(Task.status.asc(), Task.position.asc(), Task.id.asc())
     tasks = db.scalars(stmt).all()
     return [_serialize_task(t) for t in tasks]
 
@@ -576,7 +576,7 @@ def list_milestones(
         select(Milestone)
         .options(selectinload(Milestone.tasks))
         .where(Milestone.project_id == project.id)
-        .order_by(Milestone.due_date.asc().nulls_last(), Milestone.created_at.asc())
+        .order_by(Milestone.due_date.asc().nulls_last(), Milestone.created_at.asc(), Milestone.id.asc())
     ).all()
     return [_serialize_milestone(m) for m in milestones]
 
@@ -799,7 +799,7 @@ def get_project_activity(
         select(ActivityLog)
         .options(selectinload(ActivityLog.actor))
         .where(ActivityLog.project_id == project.id)
-        .order_by(ActivityLog.created_at.desc())
+        .order_by(ActivityLog.created_at.desc(), ActivityLog.id.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -843,7 +843,7 @@ def list_project_notes(
     if q and q.strip():
         stmt = stmt.where(ProjectNote.title.ilike(f"%{q.strip()}%"))
 
-    stmt = stmt.order_by(ProjectNote.created_at.desc()).offset(skip).limit(limit)
+    stmt = stmt.order_by(ProjectNote.created_at.desc(), ProjectNote.id.desc()).offset(skip).limit(limit)
     notes = db.scalars(stmt).all()
     return [_serialize_note(n) for n in notes]
 
@@ -1000,7 +1000,7 @@ def list_checklist_items(
         select(ChecklistItem)
         .options(selectinload(ChecklistItem.assignee), selectinload(ChecklistItem.creator))
         .where(ChecklistItem.project_id == project.id)
-        .order_by(ChecklistItem.position.asc(), ChecklistItem.created_at.asc())
+        .order_by(ChecklistItem.position.asc(), ChecklistItem.created_at.asc(), ChecklistItem.id.asc())
     )
     items = db.scalars(stmt).all()
     return [_serialize_checklist_item(it) for it in items]
@@ -1109,7 +1109,7 @@ def create_default_checklist(
         select(ChecklistItem)
         .options(selectinload(ChecklistItem.assignee), selectinload(ChecklistItem.creator))
         .where(ChecklistItem.project_id == project.id)
-        .order_by(ChecklistItem.position.asc())
+        .order_by(ChecklistItem.position.asc(), ChecklistItem.id.asc())
     )
     saved_items = db.scalars(stmt).all()
     return [_serialize_checklist_item(it) for it in saved_items]
