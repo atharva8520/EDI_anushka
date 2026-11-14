@@ -555,6 +555,146 @@ def test_additional_permissions_and_amendments(client):
     assert "already belongs to an active team" in inv_member_again.json()["detail"].lower()
 
 
+def test_invite_member_requires_published_or_active_hackathon(client):
+    test_client, db = client
+    lead = create_student(db, "draftlead@test.dev", "Draft Lead")
+    target = create_student(db, "targetstu@test.dev", "Target Stu")
+    draft_hackathon = make_hackathon(db, status=HackathonStatus.draft)
+
+    lead_headers = auth_header(test_client, "draftlead@test.dev", "Student@123")
+
+    # Setup a team in draft hackathon via DB
+    from app.models.team import Team, TeamMember
+    t = Team(
+        hackathon_id=draft_hackathon.id,
+        name="Draft Squad",
+        invite_code="DRAFTSQ1",
+        leader_id=lead.id,
+        members=[TeamMember(user_id=lead.id, member_role="Lead", status=MemberStatus.active)],
+    )
+    db.add(t)
+    db.commit()
+
+    # invite_member on draft hackathon must return 400
+    res = test_client.post(
+        f"/api/teams/{t.id}/invites",
+        headers=lead_headers,
+        json={"email": "targetstu@test.dev"},
+    )
+    assert res.status_code == 400
+    assert "not accepting new members" in res.json()["detail"].lower()
+
+
+def test_respond_invite_fails_when_caller_already_in_active_team(client):
+    test_client, db = client
+    lead1 = create_student(db, "lead1@test.dev", "Lead 1")
+    lead2 = create_student(db, "lead2@test.dev", "Lead 2")
+    student = create_student(db, "swing@test.dev", "Swing Student")
+    hackathon = make_hackathon(db)
+
+    h_lead1 = auth_header(test_client, "lead1@test.dev", "Student@123")
+    h_lead2 = auth_header(test_client, "lead2@test.dev", "Student@123")
+    h_student = auth_header(test_client, "swing@test.dev", "Student@123")
+
+    # Lead 1 creates Team 1
+    t1 = test_client.post(
+        "/api/teams",
+        headers=h_lead1,
+        json={"hackathon_id": str(hackathon.id), "name": "Team One", "member_role": "Team Lead"},
+    ).json()
+
+    # Lead 2 creates Team 2
+    t2 = test_client.post(
+        "/api/teams",
+        headers=h_lead2,
+        json={"hackathon_id": str(hackathon.id), "name": "Team Two", "member_role": "Team Lead"},
+    ).json()
+
+    # Lead 2 invites student while student is still free
+    inv = test_client.post(
+        f"/api/teams/{t2['id']}/invites",
+        headers=h_lead2,
+        json={"email": "swing@test.dev"},
+    ).json()
+
+    # Student joins Team 1 via invite code first
+    join1 = test_client.post(
+        "/api/teams/join",
+        headers=h_student,
+        json={"invite_code": t1["invite_code"], "member_role": "Member"},
+    )
+    assert join1.status_code == 200
+
+    # Student now attempts to accept invite to Team 2 while active in Team 1
+    # Must fail with 409 without changing anything
+    accept_res = test_client.post(f"/api/invites/{inv['id']}/respond?accept=true", headers=h_student)
+    assert accept_res.status_code == 409
+    assert "leave your current team" in accept_res.json()["detail"].lower()
+
+    # Verify invite is still pending
+    from uuid import UUID
+    from app.models.team import TeamInvite
+    inv_in_db = db.get(TeamInvite, UUID(inv["id"]))
+    assert inv_in_db.status == InviteStatus.pending
+
+
+def test_respond_invite_non_pending_changes_nothing(client):
+    test_client, db = client
+    lead = create_student(db, "lead_np@test.dev", "Lead NP")
+    target = create_student(db, "target_np@test.dev", "Target NP")
+    hackathon = make_hackathon(db)
+
+    h_lead = auth_header(test_client, "lead_np@test.dev", "Student@123")
+    h_target = auth_header(test_client, "target_np@test.dev", "Student@123")
+
+    t = test_client.post(
+        "/api/teams",
+        headers=h_lead,
+        json={"hackathon_id": str(hackathon.id), "name": "Team NP", "member_role": "Team Lead"},
+    ).json()
+
+    inv = test_client.post(
+        f"/api/teams/{t['id']}/invites",
+        headers=h_lead,
+        json={"email": "target_np@test.dev"},
+    ).json()
+
+    # Decline invite -> status becomes declined
+    dec = test_client.post(f"/api/invites/{inv['id']}/respond?accept=false", headers=h_target)
+    assert dec.status_code == 200
+
+    from uuid import UUID
+    from app.models.team import TeamInvite
+    inv_row = db.get(TeamInvite, UUID(inv["id"]))
+    assert inv_row.status == InviteStatus.declined
+
+    # Try accepting already declined invite -> 409
+    try_accept = test_client.post(f"/api/invites/{inv['id']}/respond?accept=true", headers=h_target)
+    assert try_accept.status_code == 409
+
+    # Verify status unchanged
+    db.refresh(inv_row)
+    assert inv_row.status == InviteStatus.declined
+
+
+def test_cors_expose_headers_effective(client):
+    test_client, db = client
+    student = create_student(db, "cors_stu@test.dev", "Cors Student")
+    h_student = auth_header(test_client, "cors_stu@test.dev", "Student@123")
+
+    # Send request with Origin header as a browser does
+    res = test_client.get(
+        "/api/students",
+        headers={**h_student, "Origin": "http://localhost:5173"},
+    )
+    assert res.status_code == 200
+    assert "X-Total-Count" in res.headers
+    # Verify Access-Control-Expose-Headers contains X-Total-Count
+    expose_header = res.headers.get("access-control-expose-headers", "")
+    assert "X-Total-Count" in expose_header
+
+
+
 def test_e2e_module3_walkthrough(client):
     """
     Step 3 Walkthrough with accounts:
