@@ -36,7 +36,7 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-ink">{summary.percent_complete}%</span>
             <span className="text-xs text-mute">
-              ({summary.completed_tasks}/{summary.total_tasks} completed)
+              ({summary.completed_count}/{summary.total_tasks} completed)
             </span>
           </div>
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[#EEF0F6]">
@@ -61,13 +61,13 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5 text-[11px]">
             <span className="rounded bg-[#F2F4F8] px-1.5 py-0.5 font-medium text-mute">
-              To Do: {summary.todo_tasks}
+              To Do: {summary.todo_count}
             </span>
             <span className="rounded bg-[#DBEAFE] px-1.5 py-0.5 font-medium text-[#2563EB]">
-              In Prog: {summary.in_progress_tasks}
+              In Prog: {summary.in_progress_count}
             </span>
             <span className="rounded bg-[#FEF3C7] px-1.5 py-0.5 font-medium text-[#D97706]">
-              Review: {summary.review_tasks}
+              Review: {summary.review_count}
             </span>
           </div>
         </Card>
@@ -78,10 +78,10 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
             <span className="text-xs font-semibold uppercase tracking-wider text-mute">Deadline Health</span>
             <span
               className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                summary.overdue_tasks > 0 ? "bg-[#FEE2E2] text-[#EF4444]" : "bg-[#DCFCE7] text-[#16A34A]"
+                summary.overdue_count > 0 ? "bg-[#FEE2E2] text-[#EF4444]" : "bg-[#DCFCE7] text-[#16A34A]"
               }`}
             >
-              {summary.overdue_tasks > 0 ? (
+              {summary.overdue_count > 0 ? (
                 <AlertTriangle className="h-4 w-4" />
               ) : (
                 <Clock className="h-4 w-4" />
@@ -91,15 +91,15 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
           <div className="mt-2 flex items-baseline gap-2">
             <span
               className={`text-2xl font-bold ${
-                summary.overdue_tasks > 0 ? "text-[#EF4444]" : "text-ink"
+                summary.overdue_count > 0 ? "text-[#EF4444]" : "text-ink"
               }`}
             >
-              {summary.overdue_tasks}
+              {summary.overdue_count}
             </span>
             <span className="text-xs text-mute">overdue tasks</span>
           </div>
           <div className="mt-3">
-            {summary.overdue_tasks > 0 ? (
+            {summary.overdue_count > 0 ? (
               <Badge tone="danger">Attention needed</Badge>
             ) : (
               <Badge tone="success">All deadlines on track</Badge>
@@ -120,9 +120,9 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
             <span className="text-xs text-mute">need assignment</span>
           </div>
           <div className="mt-3 text-xs text-mute">
-            {summary.member_workloads.length > 0
-              ? `${summary.member_workloads.length} active squad member${
-                  summary.member_workloads.length > 1 ? "s" : ""
+            {summary.workload && summary.workload.length > 0
+              ? `${summary.workload.length} active squad member${
+                  summary.workload.length > 1 ? "s" : ""
                 }`
               : "No active squad members"}
           </div>
@@ -130,7 +130,7 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
       </div>
 
       {/* Member Workload Bar */}
-      {summary.member_workloads.length > 0 && (
+      {summary.workload && summary.workload.length > 0 && (
         <Card className="p-4">
           <div className="mb-2 flex items-center justify-between">
             <h4 className="text-xs font-bold uppercase tracking-wider text-mute">
@@ -141,7 +141,7 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
             </span>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {summary.member_workloads.map((mw) => (
+            {summary.workload.map((mw) => (
               <div
                 key={mw.user_id}
                 className="flex items-center justify-between rounded-lg border border-line bg-canvas/40 px-3 py-2 text-xs"
@@ -153,8 +153,8 @@ export function SummaryCards({ summary, loading }: SummaryCardsProps) {
                   <span className="truncate font-semibold text-ink">{mw.full_name}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0 font-medium text-mute">
-                  <span className="text-[#16A34A]">{mw.completed_count}</span>/
-                  <span className="font-bold text-ink">{mw.task_count}</span>
+                  <span className="text-[#16A34A]">{mw.completed_tasks}</span>/
+                  <span className="font-bold text-ink">{mw.open_tasks + mw.completed_tasks}</span>
                 </div>
               </div>
             ))}

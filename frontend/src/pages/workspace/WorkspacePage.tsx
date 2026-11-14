@@ -81,7 +81,7 @@ export function WorkspacePage() {
       setActionError(null);
 
       // 1. Fetch team workspace
-      const teamRes = await api.get<TeamWorkspace | null>("/api/teams/mine");
+      const teamRes = await api.get<TeamWorkspace | null>("/teams/mine");
       const tw = teamRes.data;
       setTeamWorkspace(tw);
 
@@ -91,7 +91,7 @@ export function WorkspacePage() {
       }
 
       // 2. Fetch project
-      const projRes = await api.get<Project | null>("/api/projects/mine");
+      const projRes = await api.get<Project | null>("/projects/mine");
       const proj = projRes.data;
       setProject(proj);
 
@@ -101,9 +101,9 @@ export function WorkspacePage() {
 
       // 3. Fetch summary, tasks, and milestones in parallel
       const [sumRes, tasksRes, milesRes] = await Promise.all([
-        api.get<ProjectSummary>(`/api/projects/${proj.id}/summary`),
-        api.get<Task[]>(`/api/projects/${proj.id}/tasks`),
-        api.get<Milestone[]>(`/api/projects/${proj.id}/milestones`),
+        api.get<ProjectSummary>(`/projects/${proj.id}/summary`),
+        api.get<Task[]>(`/projects/${proj.id}/tasks`),
+        api.get<Milestone[]>(`/projects/${proj.id}/milestones`),
       ]);
 
       setSummary(sumRes.data);
@@ -125,9 +125,9 @@ export function WorkspacePage() {
     if (!project) return;
     try {
       const [sumRes, tasksRes, milesRes] = await Promise.all([
-        api.get<ProjectSummary>(`/api/projects/${project.id}/summary`),
-        api.get<Task[]>(`/api/projects/${project.id}/tasks`),
-        api.get<Milestone[]>(`/api/projects/${project.id}/milestones`),
+        api.get<ProjectSummary>(`/projects/${project.id}/summary`),
+        api.get<Task[]>(`/projects/${project.id}/tasks`),
+        api.get<Milestone[]>(`/projects/${project.id}/milestones`),
       ]);
       setSummary(sumRes.data);
       setTasks(tasksRes.data);
@@ -146,7 +146,7 @@ export function WorkspacePage() {
     setActionError(null);
 
     try {
-      await api.post(`/api/teams/${teamWorkspace.team.id}/project`, {
+      await api.post(`/teams/${teamWorkspace.team.id}/project`, {
         title: customTitle.trim() || undefined,
         summary: customSummary.trim() || undefined,
       });
@@ -196,13 +196,13 @@ export function WorkspacePage() {
     });
 
     try {
-      await api.patch(`/api/tasks/${taskId}/move`, {
+      await api.patch(`/tasks/${taskId}/move`, {
         status: targetStatus,
         position: newPosition,
       });
       // Silently re-sync summary
       if (project) {
-        api.get<ProjectSummary>(`/api/projects/${project.id}/summary`).then((res) => {
+        api.get<ProjectSummary>(`/projects/${project.id}/summary`).then((res) => {
           setSummary(res.data);
         });
       }
@@ -219,7 +219,7 @@ export function WorkspacePage() {
     if (!confirm("Are you sure you want to delete this task?")) return;
     try {
       setActionError(null);
-      await api.delete(`/api/tasks/${taskId}`);
+      await api.delete(`/tasks/${taskId}`);
       await refreshProjectData();
     } catch (err) {
       setActionError(apiError(err));

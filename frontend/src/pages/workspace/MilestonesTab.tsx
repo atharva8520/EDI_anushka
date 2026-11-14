@@ -61,13 +61,13 @@ export function MilestonesTab({
 
     try {
       if (editingMilestone) {
-        await api.patch(`/api/milestones/${editingMilestone.id}`, {
+        await api.patch(`/milestones/${editingMilestone.id}`, {
           title: title.trim(),
           description: description.trim() || null,
           due_date: dueDate ? dueDate : null,
         });
       } else {
-        await api.post(`/api/projects/${projectId}/milestones`, {
+        await api.post(`/projects/${projectId}/milestones`, {
           title: title.trim(),
           description: description.trim() || null,
           due_date: dueDate ? dueDate : null,
@@ -86,7 +86,7 @@ export function MilestonesTab({
     setLoading(true);
     setError(null);
     try {
-      await api.delete(`/api/milestones/${id}`);
+      await api.delete(`/milestones/${id}`);
       setDeleteConfirmId(null);
       onRefresh();
     } catch (err) {

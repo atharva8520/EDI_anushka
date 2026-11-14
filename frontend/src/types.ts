@@ -271,31 +271,28 @@ export interface ActivityLog {
 export interface MemberWorkload {
   user_id: string;
   full_name: string;
-  task_count: number;
-  completed_count: number;
+  open_tasks: number;
+  completed_tasks: number;
 }
 
 export interface MilestoneProgress {
   id: string;
   title: string;
+  due_date: string | null;
   total_tasks: number;
   completed_tasks: number;
-  due_date: string | null;
+  percent_complete: number;
 }
 
 export interface ProjectSummary {
-  project_id: string;
-  title: string;
-  summary: string | null;
-  problem_title: string | null;
   total_tasks: number;
-  completed_tasks: number;
-  todo_tasks: number;
-  in_progress_tasks: number;
-  review_tasks: number;
+  todo_count: number;
+  in_progress_count: number;
+  review_count: number;
+  completed_count: number;
   percent_complete: number;
-  overdue_tasks: number;
+  overdue_count: number;
   unassigned_count: number;
-  member_workloads: MemberWorkload[];
-  milestones: MilestoneProgress[];
+  workload: MemberWorkload[];
+  milestone_progress: MilestoneProgress[];
 }
