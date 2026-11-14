@@ -8,14 +8,15 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.deps import get_current_user, require_admin
 from app.database.session import get_db
 from app.models.ai import AIFeedback, AIRun
+from app.models.hackathon import Hackathon
 from app.models.profile import Profile, UserSkill
 from app.models.skill import Skill
-from app.models.team import InviteStatus, MemberStatus, Team, TeamInvite, TeamMember
+from app.models.team import InviteStatus, MemberStatus, Team, TeamInvite, TeamMember, TeamProblemSelection
 from app.models.user import User, UserRole
 from app.schemas.ai import (
     AIFeedbackCreate,
@@ -54,7 +55,21 @@ def get_teammate_recommendations(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> TeammateRecommendationsOut:
-    team = db.get(Team, team_id)
+    team = db.scalar(
+        select(Team)
+        .options(
+            selectinload(Team.members)
+            .selectinload(TeamMember.user)
+            .selectinload(User.skills)
+            .joinedload(UserSkill.skill),
+            selectinload(Team.members)
+            .selectinload(TeamMember.user)
+            .joinedload(User.profile),
+            joinedload(Team.problem_selection).joinedload(TeamProblemSelection.problem),
+            joinedload(Team.hackathon).selectinload(Hackathon.domains),
+        )
+        .where(Team.id == team_id)
+    )
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
@@ -104,9 +119,9 @@ def get_teammate_recommendations(
     candidate_stmt = (
         select(User)
         .options(
-            joinedload(User.skills).joinedload(UserSkill.skill),
-            joinedload(User.domains),
-            joinedload(User.preferred_roles),
+            selectinload(User.skills).joinedload(UserSkill.skill),
+            selectinload(User.domains),
+            selectinload(User.preferred_roles),
             joinedload(User.profile),
         )
         .where(
@@ -209,7 +224,17 @@ def get_team_skill_gap(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> SkillGapOut:
-    team = db.get(Team, team_id)
+    team = db.scalar(
+        select(Team)
+        .options(
+            selectinload(Team.members)
+            .selectinload(TeamMember.user)
+            .selectinload(User.skills)
+            .joinedload(UserSkill.skill),
+            joinedload(Team.problem_selection).joinedload(TeamProblemSelection.problem),
+        )
+        .where(Team.id == team_id)
+    )
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
 
