@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Github,
   ExternalLink,
@@ -11,9 +12,11 @@ import {
   ListTodo,
   FileText,
   AlertCircle,
+  Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
-import type { Project, ProjectSummary, Member, HackathonDetail } from "../../types";
+import type { Project, ProjectSummary, Member, HackathonDetail, SkillGapResponse } from "../../types";
 import { Card, Skeleton } from "../../components/States";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
@@ -40,6 +43,11 @@ export function OverviewTab({
   // Hackathon end date & countdown
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
   const [hackathonLoading, setHackathonLoading] = useState(false);
+
+  // Skill Gap Analysis state
+  const [skillGap, setSkillGap] = useState<SkillGapResponse | null>(null);
+  const [skillGapLoading, setSkillGapLoading] = useState(false);
+  const [skillGapError, setSkillGapError] = useState<string | null>(null);
 
   // Edit project info
   const [editing, setEditing] = useState(false);
@@ -83,6 +91,41 @@ export function OverviewTab({
       mounted = false;
     };
   }, [hackathonId]);
+
+  // Fetch skill-gap analysis for squad
+  useEffect(() => {
+    if (!project.team_id) return;
+    let mounted = true;
+    setSkillGapLoading(true);
+    setSkillGapError(null);
+
+    api
+      .get<SkillGapResponse>(`/ai/teams/${project.team_id}/skill-gap`)
+      .then((res) => {
+        if (mounted) {
+          setSkillGap(res.data);
+        }
+      })
+      .catch((err) => {
+        if (mounted) {
+          // If 400 with no problem selected, we gracefully keep skillGap as null
+          if (err?.response?.status === 400) {
+            setSkillGap(null);
+          } else {
+            setSkillGapError(apiError(err, "Failed to load skill-gap analysis"));
+          }
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setSkillGapLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [project.team_id]);
 
   // Calculate countdown label
   function getCountdownLabel(): string {
@@ -369,6 +412,143 @@ export function OverviewTab({
               </p>
             </Card>
           </div>
+
+          {/* Problem Skill Gap Analysis Card */}
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-sm text-ink">Problem Skill Gap Analysis</h3>
+              </div>
+              {skillGap?.problem_code ? (
+                <span className="font-mono text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  {skillGap.problem_code}
+                </span>
+              ) : null}
+            </div>
+
+            {skillGapLoading ? (
+              <div className="space-y-2 py-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : skillGapError ? (
+              <div className="rounded-[12px] bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+                {skillGapError}
+              </div>
+            ) : !skillGap ? (
+              <div className="rounded-[12px] border border-dashed border-line p-4 text-center space-y-2">
+                <p className="text-xs text-mute">
+                  No official problem statement selected for this squad yet.
+                </p>
+                <Link to="/app/teams" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                  Go to Squad Management to select a problem
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-semibold text-ink">{skillGap.problem_title}</h4>
+                  <p className="text-[11px] text-mute mt-0.5">
+                    Required technologies evaluated against current squad members' capabilities:
+                  </p>
+                </div>
+
+                {/* Summary badges */}
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-md bg-emerald-50 px-2 py-1 font-semibold text-emerald-800 border border-emerald-200">
+                    ✓ {skillGap.summary.covered} Covered
+                  </span>
+                  <span className="rounded-md bg-amber-50 px-2 py-1 font-semibold text-amber-800 border border-amber-200">
+                    ⚠ {skillGap.summary.partial} Partial
+                  </span>
+                  <span className="rounded-md bg-rose-50 px-2 py-1 font-semibold text-rose-800 border border-rose-200">
+                    ✕ {skillGap.summary.missing} Missing
+                  </span>
+                  {skillGap.summary.unclassified > 0 ? (
+                    <span className="rounded-md bg-slate-50 px-2 py-1 font-medium text-slate-700 border border-slate-200">
+                      ℹ {skillGap.summary.unclassified} General Requirements
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Detailed Pills */}
+                <div className="space-y-2 pt-1 border-t border-line/60">
+                  {skillGap.covered.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-emerald-800 mr-1">Covered:</span>
+                      {skillGap.covered.map((it, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-[11px] font-medium"
+                        >
+                          {it.name || it.term} ({it.category || "Skill"})
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {skillGap.partial.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-amber-800 mr-1">Partial:</span>
+                      {skillGap.partial.map((it, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-amber-100 text-amber-900 px-2.5 py-0.5 text-[11px] font-medium"
+                        >
+                          {it.name || it.term} ({it.category || "Skill"} - Beginner)
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {skillGap.missing.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-rose-800 mr-1">Missing:</span>
+                      {skillGap.missing.map((it, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-rose-100 text-rose-900 px-2.5 py-0.5 text-[11px] font-medium"
+                        >
+                          {it.name || it.term} ({it.category || "Unmet"})
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {skillGap.unclassified.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-slate-600 mr-1">Other:</span>
+                      {skillGap.unclassified.map((tok, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-slate-100 text-slate-700 px-2.5 py-0.5 text-[11px] font-medium"
+                        >
+                          {tok}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {(skillGap.missing.length > 0 || skillGap.partial.length > 0) && (
+                  <div className="rounded-[10px] bg-primary/5 border border-primary/20 p-3 text-xs flex items-center justify-between gap-3">
+                    <p className="text-ink">
+                      Looking to fill these skill gaps? Check smart teammate suggestions.
+                    </p>
+                    <Link
+                      to="/app/teams"
+                      className="shrink-0 flex items-center gap-1 font-bold text-primary hover:underline"
+                    >
+                      View Suggestions
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </Card>
         </div>
 
         {/* Right Column (1 col): Team Members */}

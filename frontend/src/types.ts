@@ -332,3 +332,67 @@ export interface ChecklistItem {
   updated_at: string;
 }
 
+// Module 5a: Smart Suggestions & Weighted Matching
+export interface CandidateScoreBreakdown {
+  category_complement: number;
+  skill_depth: number;
+  domain_overlap: number;
+  availability: number;
+  preferred_role: number;
+}
+
+export interface CandidateRecommendation {
+  id: string;
+  full_name: string;
+  college: string | null;
+  branch: string | null;
+  year: string | null;
+  score: number;
+  features: CandidateScoreBreakdown;
+  reasons: string[];
+  invite_pending: boolean;
+}
+
+export interface TeammateRecommendationsResponse {
+  run_id: string;
+  c_target: string[];
+  excluded_incomplete_count: number;
+  recommendations: CandidateRecommendation[];
+}
+
+export interface SkillGapItem {
+  type: "skill" | "category";
+  term: string;
+  name?: string | null;
+  category?: string | null;
+  status: "covered" | "partial" | "missing";
+  strength?: number | null;
+}
+
+export interface SkillGapSummary {
+  total_required: number;
+  covered: number;
+  partial: number;
+  missing: number;
+  unclassified: number;
+}
+
+export interface SkillGapResponse {
+  run_id: string;
+  problem_id: string;
+  problem_title: string;
+  problem_code?: string | null;
+  covered: SkillGapItem[];
+  partial: SkillGapItem[];
+  missing: SkillGapItem[];
+  unclassified: string[];
+  summary: SkillGapSummary;
+}
+
+export interface AIFeedbackPayload {
+  run_id: string;
+  candidate_id?: string | null;
+  rating: 1 | -1;
+  comment?: string | null;
+}
+

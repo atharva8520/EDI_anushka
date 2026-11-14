@@ -1,4 +1,5 @@
 from app.database.base import Base
+from app.models.ai import AIFeedback, AIRun
 from app.models.hackathon import Hackathon, HackathonDomain, HackathonProblem, JudgingCriterion
 from app.models.profile import PreviousProject, Profile, UserDomainInterest, UserPreferredRole, UserSkill
 from app.models.project import ActivityLog, ChecklistItem, Milestone, Project, ProjectNote, Task, TaskPriority, TaskStatus
@@ -31,4 +32,6 @@ __all__ = [
     "TaskPriority",
     "TaskStatus",
     "ActivityLog",
+    "AIRun",
+    "AIFeedback",
 ]
