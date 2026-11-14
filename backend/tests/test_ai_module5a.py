@@ -144,6 +144,14 @@ def test_availability_compatibility_weekdays_vs_weekends(client):
     res_lim = score_candidate(u_lim, ["Backend"], set(), "weekdays")
     assert res_lim["features"]["availability"] == 0.3
 
+    # Team mode flexible, candidate weekdays must give 0.8
+    res_wd_on_flex = score_candidate(u_weekdays, ["Backend"], set(), "flexible")
+    assert res_wd_on_flex["features"]["availability"] == 0.8
+
+    # Team mode weekends, candidate weekdays gives 0.0
+    res_wd_on_we = score_candidate(u_weekdays, ["Backend"], set(), "weekends")
+    assert res_wd_on_we["features"]["availability"] == 0.0
+
 
 # =========================================================================
 # Case 4: Deterministic ordering & filler candidate outranks non-filler
@@ -279,11 +287,16 @@ def test_pending_invite_candidate_marked(client):
     invited = create_student(db, "invited@test.dev", "Invited Student")
     db.add(UserSkill(user_id=invited.id, skill_id=skills["python"].id, proficiency=Proficiency.advanced))
     db.add(TeamInvite(team_id=UUID(team_id), inviter_id=leader.id, invitee_id=invited.id, status=InviteStatus.pending))
+
+    non_invited = create_student(db, "non_invited@test.dev", "Non Invited Student")
+    db.add(UserSkill(user_id=non_invited.id, skill_id=skills["python"].id, proficiency=Proficiency.intermediate))
     db.commit()
 
     rec_res = test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers)
     rec = next(r for r in rec_res.json()["recommendations"] if r["id"] == str(invited.id))
     assert rec["invite_pending"] is True
+    rec_non = next(r for r in rec_res.json()["recommendations"] if r["id"] == str(non_invited.id))
+    assert rec_non["invite_pending"] is False
 
 
 def test_zero_skills_excluded_and_incomplete_counted(client):
@@ -346,6 +359,13 @@ def test_no_email_anywhere(client):
     assert "@" not in out_str
     assert "secret_email" not in in_str
     assert "secret_email" not in out_str
+    assert cand.full_name not in in_str
+    assert cand.full_name not in out_str
+    # Verify output_json only has allowed deterministic structural keys
+    for r in run.output_json.get("results", []):
+        assert set(r.keys()) == {"id", "score", "features", "invite_pending"}
+        assert "name" not in r
+        assert "email" not in r
 
 
 # =========================================================================
@@ -426,10 +446,12 @@ def test_recommendations_and_skill_gap_permissions(client):
     leader = create_student(db, "lead_perm@test.dev", "Lead Perm")
     member = create_student(db, "mem_perm@test.dev", "Mem Perm")
     outsider = create_student(db, "out_perm@test.dev", "Outsider Perm")
+    admin = create_admin(db)
 
     lead_headers = auth_header(test_client, "lead_perm@test.dev", "Student@123")
     mem_headers = auth_header(test_client, "mem_perm@test.dev", "Student@123")
     out_headers = auth_header(test_client, "out_perm@test.dev", "Student@123")
+    admin_headers = auth_header(test_client, "admin@test.dev", "Admin@12345")
 
     t_res = test_client.post(
         "/api/teams",
@@ -439,14 +461,59 @@ def test_recommendations_and_skill_gap_permissions(client):
     team_id = t_res.json()["id"]
 
     db.add(TeamMember(team_id=UUID(team_id), user_id=member.id, member_role="Dev", status=MemberStatus.active))
+    
+    # Add a problem so skill-gap has a problem
+    problem = HackathonProblem(
+        hackathon_id=hackathon.id,
+        code="P-PERM",
+        title="Perm Problem",
+        statement="Problem statement",
+        description="Description",
+        domain="Perm",
+        target_users="Users",
+        constraints="None",
+        expected_outcome="Outcome",
+        evaluation_criteria="Criteria",
+        required_technologies="Python",
+        is_published=True,
+    )
+    db.add(problem)
+    db.flush()
+    test_client.post(
+        f"/api/teams/{team_id}/problem",
+        headers=lead_headers,
+        json={"problem_id": str(problem.id)},
+    )
     db.commit()
 
-    # Leader -> 200
-    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers).status_code == 200
-    # Member -> 200
-    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=mem_headers).status_code == 200
-    # Outsider -> 403
+    # Generate a run to test feedback permissions
+    rec = test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers)
+    run_id = rec.json()["run_id"]
+
+    # 1. Anonymous 401 tests
+    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations").status_code == 401
+    assert test_client.get(f"/api/ai/teams/{team_id}/skill-gap").status_code == 401
+    assert test_client.post("/api/ai/feedback", json={"run_id": run_id, "rating": 1}).status_code == 401
+    assert test_client.get("/api/ai/feedback/summary").status_code == 401
+
+    # 2. Outsider 403 tests on team endpoints
     assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=out_headers).status_code == 403
+    assert test_client.get(f"/api/ai/teams/{team_id}/skill-gap", headers=out_headers).status_code == 403
+    assert test_client.post("/api/ai/feedback", headers=out_headers, json={"run_id": run_id, "rating": 1}).status_code == 403
+
+    # 3. Admin (not on team) 403 tests on team endpoints
+    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=admin_headers).status_code == 403
+    assert test_client.get(f"/api/ai/teams/{team_id}/skill-gap", headers=admin_headers).status_code == 403
+    assert test_client.post("/api/ai/feedback", headers=admin_headers, json={"run_id": run_id, "rating": 1}).status_code == 403
+
+    # 4. Student 403 test on admin-only summary
+    assert test_client.get("/api/ai/feedback/summary", headers=lead_headers).status_code == 403
+
+    # 5. Active member / leader 200 tests
+    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers).status_code == 200
+    assert test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=mem_headers).status_code == 200
+    assert test_client.get(f"/api/ai/teams/{team_id}/skill-gap", headers=lead_headers).status_code == 200
+    assert test_client.get(f"/api/ai/teams/{team_id}/skill-gap", headers=mem_headers).status_code == 200
 
 
 # =========================================================================
@@ -566,6 +633,16 @@ def test_feedback_validation_and_upsert_and_own_team_only(client):
     assert fb_no_cand2.status_code == 201
     assert fb_no_cand2.json()["id"] == fb_no_cand1.json()["id"]
 
+    # 7. Feedback for a deleted team is rejected with 400
+    test_client.post(f"/api/teams/{team_id}/leave", headers=lead_headers)
+    del_fb = test_client.post(
+        "/api/ai/feedback",
+        headers=lead_headers,
+        json={"run_id": run_id, "rating": 1},
+    )
+    assert del_fb.status_code == 400
+    assert "Run team no longer exists" in del_fb.json()["detail"]
+
 
 # =========================================================================
 # Case 12: Feedback summary endpoint (admin only)
@@ -648,3 +725,64 @@ def test_team_deletion_works(client):
     run = db.query(AIRun).filter(AIRun.id == UUID(run_id)).first()
     assert run is not None
     assert run.team_id is None
+
+
+# =========================================================================
+# Case 14: Query efficiency: Constant query count (no N+1)
+# =========================================================================
+
+def test_recommendations_no_n_plus_one_queries(client):
+    from sqlalchemy import event
+    from app.models.profile import UserDomainInterest, UserPreferredRole
+
+    test_client, db = client
+    skills = _seed_base_skills(db)
+    hackathon = make_hackathon(db)
+
+    leader = create_student(db, "lead_n1@test.dev", "Lead N1")
+    lead_headers = auth_header(test_client, "lead_n1@test.dev", "Student@123")
+    t_res = test_client.post(
+        "/api/teams",
+        headers=lead_headers,
+        json={"hackathon_id": str(hackathon.id), "name": "Squad N1", "member_role": "Lead"},
+    )
+    team_id = t_res.json()["id"]
+
+    # Create 5 candidates with skills, domains, and preferred roles
+    for i in range(5):
+        c = create_student(db, f"cand_n1_{i}@test.dev", f"Cand {i}")
+        db.add(UserSkill(user_id=c.id, skill_id=skills["python"].id, proficiency=Proficiency.advanced))
+        db.add(UserDomainInterest(user_id=c.id, domain="Healthcare"))
+        db.add(UserPreferredRole(user_id=c.id, role_name="Backend Developer"))
+    db.commit()
+
+    query_count = [0]
+
+    def count_queries(conn, cursor, statement, parameters, context, executemany):
+        query_count[0] += 1
+
+    event.listen(db.bind, "before_cursor_execute", count_queries)
+    try:
+        query_count[0] = 0
+        res1 = test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers)
+        assert res1.status_code == 200
+        count_for_5 = query_count[0]
+
+        # Add 15 more candidates (20 total)
+        for i in range(5, 20):
+            c = create_student(db, f"cand_n1_{i}@test.dev", f"Cand {i}")
+            db.add(UserSkill(user_id=c.id, skill_id=skills["react"].id, proficiency=Proficiency.intermediate))
+            db.add(UserDomainInterest(user_id=c.id, domain="FinTech"))
+            db.add(UserPreferredRole(user_id=c.id, role_name="Frontend Developer"))
+        db.commit()
+
+        query_count[0] = 0
+        res2 = test_client.get(f"/api/ai/teams/{team_id}/recommendations", headers=lead_headers)
+        assert res2.status_code == 200
+        count_for_20 = query_count[0]
+
+        # With selectinload eager loading, query count is O(1) and does not scale with candidate count
+        assert count_for_20 == count_for_5
+    finally:
+        event.remove(db.bind, "before_cursor_execute", count_queries)
+
