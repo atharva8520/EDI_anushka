@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.models.team import InviteStatus, MemberStatus
 from app.schemas.profile import UserSkillOut
@@ -22,8 +22,19 @@ class MemberRoleUpdate(BaseModel):
     member_role: str = Field(min_length=2, max_length=80)
 
 
+class TeamTransferLeadership(BaseModel):
+    member_id: UUID
+
+
 class InviteCreate(BaseModel):
-    email: str
+    email: str | None = None
+    invitee_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def validate_one_of(self):
+        if (self.email is None and self.invitee_id is None) or (self.email is not None and self.invitee_id is not None):
+            raise ValueError("Exactly one of email or invitee_id must be provided")
+        return self
 
 
 class ProblemSelect(BaseModel):
@@ -64,6 +75,11 @@ class TeamOut(BaseModel):
     selected_problem: SelectedProblemOut | None
     created_at: datetime
     is_leader: bool
+    active_member_count: int
+    team_size_min: int
+    team_size_max: int
+    is_ready: bool
+    is_full: bool
 
 
 class InviteOut(BaseModel):
@@ -71,6 +87,15 @@ class InviteOut(BaseModel):
     team_id: UUID
     team_name: str
     hackathon_name: str
+    status: InviteStatus
+    created_at: datetime
+
+
+class TeamInviteLeaderOut(BaseModel):
+    id: UUID
+    team_id: UUID
+    invitee_id: UUID
+    invitee_name: str
     status: InviteStatus
     created_at: datetime
 
