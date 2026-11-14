@@ -209,3 +209,93 @@ export interface AdminStats {
   teams: number;
   problems: number;
 }
+
+// Module 4: Project Workspace & Kanban Board
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+export type TaskStatus = "todo" | "in_progress" | "review" | "completed";
+
+export interface Project {
+  id: string;
+  team_id: string;
+  title: string;
+  summary: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  problem_title: string | null;
+}
+
+export interface Milestone {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  created_at: string;
+  total_tasks: number;
+  completed_tasks: number;
+}
+
+export interface Task {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  position: number;
+  assignee_id: string | null;
+  assignee_name: string | null;
+  creator_id: string;
+  creator_name: string | null;
+  milestone_id: string | null;
+  milestone_title: string | null;
+  due_date: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  project_id: string;
+  actor_id: string;
+  actor_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  details: Record<string, any>;
+  created_at: string;
+}
+
+export interface MemberWorkload {
+  user_id: string;
+  full_name: string;
+  task_count: number;
+  completed_count: number;
+}
+
+export interface MilestoneProgress {
+  id: string;
+  title: string;
+  total_tasks: number;
+  completed_tasks: number;
+  due_date: string | null;
+}
+
+export interface ProjectSummary {
+  project_id: string;
+  title: string;
+  summary: string | null;
+  problem_title: string | null;
+  total_tasks: number;
+  completed_tasks: number;
+  todo_tasks: number;
+  in_progress_tasks: number;
+  review_tasks: number;
+  percent_complete: number;
+  overdue_tasks: number;
+  unassigned_count: number;
+  member_workloads: MemberWorkload[];
+  milestones: MilestoneProgress[];
+}

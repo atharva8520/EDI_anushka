@@ -5,7 +5,6 @@ import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardAppPage } from "./pages/DashboardAppPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { HackathonListPage } from "./pages/hackathons/HackathonListPage";
 import { HackathonDetailPage } from "./pages/hackathons/HackathonDetailPage";
@@ -16,6 +15,7 @@ import { AdminComingSoonPage } from "./pages/AdminComingSoonPage";
 import { TeamPage } from "./pages/teams/TeamPage";
 import { TeammateSearchPage } from "./pages/teams/TeammateSearchPage";
 import { InvitesPage } from "./pages/teams/InvitesPage";
+import { WorkspacePage } from "./pages/workspace/WorkspacePage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth();
@@ -93,15 +93,7 @@ export function App() {
         <Route path="team" element={<TeamPage />} />
         <Route path="team/find" element={<TeammateSearchPage />} />
         <Route path="invites" element={<InvitesPage />} />
-        <Route
-          path="workspace"
-          element={
-            <PlaceholderPage
-              title="Project Workspace"
-              description="Coordinate milestones, problem solutions, submissions, and demo decks with your teammates."
-            />
-          }
-        />
+        <Route path="workspace" element={<WorkspacePage />} />
         <Route path="admin" element={<AdminComingSoonPage />} />
       </Route>
 
