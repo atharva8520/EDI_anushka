@@ -135,6 +135,11 @@ export interface Team {
   } | null;
   created_at: string;
   is_leader: boolean;
+  active_member_count: number;
+  team_size_min: number;
+  team_size_max: number;
+  is_ready: boolean;
+  is_full: boolean;
 }
 
 export interface SkillMapItem {
@@ -156,6 +161,27 @@ export interface Invite {
   hackathon_name: string;
   status: string;
   created_at: string;
+}
+
+export interface TeamInviteLeader {
+  id: string;
+  team_id: string;
+  invitee_id: string;
+  invitee_name: string;
+  status: string;
+  created_at: string;
+}
+
+export interface StudentSearchItem {
+  id: string;
+  full_name: string;
+  college: string | null;
+  branch: string | null;
+  year: string | null;
+  availability: "flexible" | "weekdays" | "weekends" | "limited" | null;
+  skills: UserSkill[];
+  preferred_roles: string[];
+  domains: string[];
 }
 
 export interface StudentDashboard {

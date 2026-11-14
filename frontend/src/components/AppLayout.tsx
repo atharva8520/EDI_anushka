@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -16,12 +16,34 @@ import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
+import { api } from "../api/client";
 
 export function AppLayout() {
   const { profile, role, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [inviteCount, setInviteCount] = useState<number>(0);
+
+  const fetchInvites = useCallback(() => {
+    if (role === "student" || profile?.role === "student") {
+      api
+        .get("/invites")
+        .then((res) => {
+          if (Array.isArray(res.data)) {
+            setInviteCount(res.data.length);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [role, profile?.role]);
+
+  useEffect(() => {
+    fetchInvites();
+    const handleRefresh = () => fetchInvites();
+    window.addEventListener("refresh-invites", handleRefresh);
+    return () => window.removeEventListener("refresh-invites", handleRefresh);
+  }, [fetchInvites]);
 
   function handleLogout() {
     logout();
@@ -83,7 +105,12 @@ export function AppLayout() {
                 }`}
               >
                 <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-mute"}`} />
-                <span>{item.label}</span>
+                <span className="flex-1">{item.label}</span>
+                {item.href === "/app/invites" && inviteCount > 0 ? (
+                  <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                    {inviteCount}
+                  </span>
+                ) : null}
               </NavLink>
             );
           })}
