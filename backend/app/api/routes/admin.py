@@ -58,7 +58,7 @@ def admin_teams(
     # Paginated query
     paged_stmt = (
         stmt.options(selectinload(Team.hackathon), selectinload(Team.leader))
-        .order_by(Team.created_at.desc())
+        .order_by(Team.created_at.desc(), Team.id.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -273,7 +273,7 @@ def admin_participants(
     # Paginated users
     paged_stmt = (
         stmt.options(selectinload(User.memberships).selectinload(TeamMember.team))
-        .order_by(User.created_at.desc())
+        .order_by(User.created_at.desc(), User.id.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -370,7 +370,7 @@ def admin_activity(
 
     # Per-hackathon metrics (grouped)
     hackathons = db.scalars(
-        select(Hackathon).options(selectinload(Hackathon.teams).selectinload(Team.members)).order_by(Hackathon.start_date.desc())
+        select(Hackathon).options(selectinload(Hackathon.teams).selectinload(Team.members)).order_by(Hackathon.start_date.desc(), Hackathon.id.desc())
     ).all()
 
     h_metrics: list[AdminHackathonActivity] = []
