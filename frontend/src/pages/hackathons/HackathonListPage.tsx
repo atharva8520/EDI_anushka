@@ -1,6 +1,6 @@
 import { useState, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
-import { Search, Calendar, Users, MapPin, Filter, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react";
+import { Search, Calendar, Users, MapPin, Filter, ChevronLeft, ChevronRight, ArrowUpDown, Plus, ShieldCheck, Edit2, FileCode } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import type { HackathonListItem } from "../../types";
 import { Button } from "../../components/Button";
@@ -100,12 +100,30 @@ export function HackathonListPage() {
       {/* Main Container */}
       <main className="mx-auto max-w-6xl px-6 py-8">
         {/* Intro */}
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">Discover Events</p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight md:text-4xl">Hackathons & Challenges</h1>
-          <p className="mt-2 text-sm text-mute md:text-base">
-            Explore active hackathons, examine official problem statements, and form your squad.
-          </p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Discover Events</p>
+            <h1 className="mt-1 text-3xl font-extrabold tracking-tight md:text-4xl">Hackathons & Challenges</h1>
+            <p className="mt-2 text-sm text-mute md:text-base">
+              Explore active hackathons, examine official problem statements, and form your squad.
+            </p>
+          </div>
+          {role === "admin" && (
+            <div className="flex items-center gap-2 shrink-0">
+              <Link to="/app/admin/hackathons">
+                <Button variant="secondary" className="text-xs gap-1.5 py-2">
+                  <ShieldCheck className="h-4 w-4 text-amber-600" />
+                  Admin Console
+                </Button>
+              </Link>
+              <Link to="/app/admin/hackathons/new">
+                <Button variant="primary" className="text-xs gap-1.5 py-2">
+                  <Plus className="h-4 w-4" />
+                  Create Hackathon
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         {/* Search & Filter Toolbar */}
@@ -296,6 +314,21 @@ export function HackathonListPage() {
                       {isDeadlinePassed ? (
                         <div className="mb-2 text-[11px] font-semibold text-amber-600 bg-amber-50 rounded px-2 py-1 text-center">
                           Registration Closed
+                        </div>
+                      ) : null}
+
+                      {role === "admin" ? (
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <Link to={`/app/admin/hackathons/${h.id}/edit`} className="block">
+                            <Button variant="secondary" className="w-full text-xs py-1.5 gap-1">
+                              <Edit2 className="h-3 w-3 text-mute" /> Edit
+                            </Button>
+                          </Link>
+                          <Link to={`/app/admin/hackathons/${h.id}/problems`} className="block">
+                            <Button variant="secondary" className="w-full text-xs py-1.5 gap-1">
+                              <FileCode className="h-3 w-3 text-mute" /> Problems
+                            </Button>
+                          </Link>
                         </div>
                       ) : null}
 
