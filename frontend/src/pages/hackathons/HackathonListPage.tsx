@@ -1,6 +1,21 @@
 import { useState, useEffect, useTransition } from "react";
 import { Link } from "react-router-dom";
-import { Search, Calendar, Users, MapPin, Filter, ChevronLeft, ChevronRight, ArrowUpDown, Plus, ShieldCheck, Edit2, FileCode } from "lucide-react";
+import {
+  Search,
+  Users,
+  MapPin,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Plus,
+  ShieldCheck,
+  Edit2,
+  FileCode,
+  Building2,
+  Trophy,
+  Clock,
+} from "lucide-react";
 import { api, apiError } from "../../api/client";
 import type { HackathonListItem } from "../../types";
 import { Button } from "../../components/Button";
@@ -134,7 +149,7 @@ export function HackathonListPage() {
               <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" />
               <input
                 type="text"
-                placeholder="Search by event name, description, or domain..."
+                placeholder="Search by event name, company / organizer, domain, or city..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-[12px] border border-line bg-canvas pl-10 pr-4 py-2 text-sm outline-none transition focus:border-primary focus:bg-white"
@@ -206,6 +221,27 @@ export function HackathonListPage() {
               </div>
             </div>
           </div>
+
+          {/* Quick Domain Filter Pills */}
+          <div className="mt-3.5 pt-3 border-t border-line/60 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-bold text-mute mr-1">Categories:</span>
+            {DOMAIN_OPTIONS.map((d) => (
+              <button
+                key={d}
+                onClick={() => {
+                  setSelectedDomain(d);
+                  setPage(1);
+                }}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
+                  selectedDomain === d
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-canvas hover:bg-line/60 text-mute hover:text-ink"
+                }`}
+              >
+                {d === "All" ? "All Tracks" : d}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content Area */}
@@ -252,23 +288,24 @@ export function HackathonListPage() {
                       {/* Top Meta */}
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <Badge tone={statusTone(h.status)}>{h.status.toUpperCase()}</Badge>
-                        <span className="text-xs text-mute font-medium truncate max-w-[150px]">
+                        <span className="inline-flex items-center gap-1 text-xs text-mute font-semibold truncate max-w-[160px]">
+                          <Building2 className="h-3 w-3 text-primary shrink-0" />
                           {h.organizer}
                         </span>
                       </div>
 
                       {/* Title & Short description */}
                       <Link to={`/app/hackathons/${h.id}`}>
-                        <h2 className="text-lg font-bold tracking-tight text-ink hover:text-primary transition line-clamp-1">
+                        <h2 className="text-base font-bold tracking-tight text-ink hover:text-primary transition line-clamp-1">
                           {h.name}
                         </h2>
                       </Link>
-                      <p className="mt-2 text-xs text-mute leading-relaxed line-clamp-2">
+                      <p className="mt-1.5 text-xs text-mute leading-relaxed line-clamp-2">
                         {h.short_description}
                       </p>
 
                       {/* Domains */}
-                      <div className="mt-4 flex flex-wrap gap-1.5">
+                      <div className="mt-3.5 flex flex-wrap gap-1.5">
                         {h.domains.map((d) => (
                           <span
                             key={d}
@@ -280,39 +317,45 @@ export function HackathonListPage() {
                       </div>
 
                       {/* Key dates & Stats */}
-                      <div className="mt-5 space-y-2 border-t border-line pt-4 text-xs text-mute">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3.5 w-3.5 text-primary" />
-                          <span>
-                            Event: {h.start_date} to {h.end_date}
+                      <div className="mt-4 space-y-2 border-t border-line/70 pt-3.5 text-xs text-mute">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-amber-600" />
+                            Reg Deadline:
                           </span>
+                          <strong className="text-ink">{h.registration_deadline}</strong>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-3.5 w-3.5 text-accent-blue" />
-                          <span>Location: {h.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-3.5 w-3.5 text-accent-violet" />
-                          <span>
-                            Squad Size: {h.team_size_min}–{h.team_size_max} builders
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-accent-blue" />
+                            Location:
                           </span>
+                          <span className="font-semibold text-ink">{h.location}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <Users className="h-3.5 w-3.5 text-accent-violet" />
+                            Squad Size:
+                          </span>
+                          <span>{h.team_size_min}–{h.team_size_max} builders</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Bottom CTA & Counters */}
-                    <div className="mt-6 border-t border-line pt-4">
+                    <div className="mt-5 border-t border-line/70 pt-3.5">
                       <div className="flex items-center justify-between mb-3 text-xs">
-                        <span className="font-semibold text-primary">
-                          {h.problem_count} {h.problem_count === 1 ? "Problem" : "Problems"}
+                        <span className="font-bold text-primary flex items-center gap-1">
+                          <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                          {h.problem_count} {h.problem_count === 1 ? "Problem Track" : "Problem Tracks"}
                         </span>
-                        <span className="text-mute">
-                          {h.team_count} {h.team_count === 1 ? "Team" : "Teams"}
+                        <span className="text-mute font-medium">
+                          {h.team_count} {h.team_count === 1 ? "Active Squad" : "Active Squads"}
                         </span>
                       </div>
 
                       {isDeadlinePassed ? (
-                        <div className="mb-2 text-[11px] font-semibold text-amber-600 bg-amber-50 rounded px-2 py-1 text-center">
+                        <div className="mb-2 text-[11px] font-semibold text-amber-600 bg-amber-50 rounded-lg px-2 py-1 text-center border border-amber-200">
                           Registration Closed
                         </div>
                       ) : null}
@@ -333,8 +376,8 @@ export function HackathonListPage() {
                       ) : null}
 
                       <Link to={`/app/hackathons/${h.id}`} className="block">
-                        <Button variant="primary" className="w-full text-xs">
-                          View Details & Problems
+                        <Button variant="primary" className="w-full text-xs py-2 shadow-sm">
+                          Explore Challenge &amp; Form Squad
                         </Button>
                       </Link>
                     </div>

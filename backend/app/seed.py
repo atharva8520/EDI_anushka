@@ -107,59 +107,57 @@ STUDENTS = [
 def seed() -> None:
     db = SessionLocal()
     try:
-        if db.scalar(select(User).where(User.email == "admin@hacknova.dev")):
-            print("Seed already applied.")
-            return
-
-        admin = User(
-            email="admin@hacknova.dev",
-            password_hash=hash_password("Admin@12345"),
-            full_name="HackNova Organizer",
-            role=UserRole.admin,
-            college="HackNova",
-            branch="Operations",
-            year="Staff",
-        )
-        admin.profile = Profile(bio="Official organizer account for development.", avatar_seed="organizer")
-        db.add(admin)
-        db.flush()
-
-        skill_map: dict[str, Skill] = {}
-        for name, category in SKILLS:
-            skill = Skill(name=name, category=category)
-            db.add(skill)
-            skill_map[name] = skill
-        db.flush()
-
-        users: dict[str, User] = {}
-        for row in STUDENTS:
-            user = User(
-                email=row["email"],
-                password_hash=hash_password("Student@123"),
-                full_name=row["full_name"],
-                role=UserRole.student,
-                college=row["college"],
-                branch=row["branch"],
-                year=row["year"],
+        admin = db.scalar(select(User).where(User.email == "admin@hacknova.dev"))
+        if not admin:
+            admin = User(
+                email="admin@hacknova.dev",
+                password_hash=hash_password("Admin@12345"),
+                full_name="HackNova Organizer",
+                role=UserRole.admin,
+                college="HackNova",
+                branch="Operations",
+                year="Staff",
             )
-            user.profile = Profile(
-                bio=row["bio"],
-                github_url=row["github"],
-                availability=row["availability"],
-                hackathon_experience=row["experience"],
-                avatar_seed=row["full_name"],
-            )
-            user.preferred_roles = [UserPreferredRole(role_name=r) for r in row["roles"]]
-            user.domains = [UserDomainInterest(domain=d) for d in row["domains"]]
-            user.skills = [
-                UserSkill(skill=skill_map[name], proficiency=Proficiency(level)) for name, level in row["skills"]
-            ]
-            user.previous_projects = [
-                PreviousProject(title=t, description=d, tech_stack=tech, year=y) for t, d, tech, y in row["projects"]
-            ]
-            db.add(user)
-            users[row["email"]] = user
-        db.flush()
+            admin.profile = Profile(bio="Official organizer account for development.", avatar_seed="organizer")
+            db.add(admin)
+            db.flush()
+
+            skill_map: dict[str, Skill] = {}
+            for name, category in SKILLS:
+                skill = Skill(name=name, category=category)
+                db.add(skill)
+                skill_map[name] = skill
+            db.flush()
+
+            users: dict[str, User] = {}
+            for row in STUDENTS:
+                user = User(
+                    email=row["email"],
+                    password_hash=hash_password("Student@123"),
+                    full_name=row["full_name"],
+                    role=UserRole.student,
+                    college=row["college"],
+                    branch=row["branch"],
+                    year=row["year"],
+                )
+                user.profile = Profile(
+                    bio=row["bio"],
+                    github_url=row["github"],
+                    availability=row["availability"],
+                    hackathon_experience=row["experience"],
+                    avatar_seed=row["full_name"],
+                )
+                user.preferred_roles = [UserPreferredRole(role_name=r) for r in row["roles"]]
+                user.domains = [UserDomainInterest(domain=d) for d in row["domains"]]
+                user.skills = [
+                    UserSkill(skill=skill_map[name], proficiency=Proficiency(level)) for name, level in row["skills"]
+                ]
+                user.previous_projects = [
+                    PreviousProject(title=t, description=d, tech_stack=tech, year=y) for t, d, tech, y in row["projects"]
+                ]
+                db.add(user)
+                users[row["email"]] = user
+            db.flush()
 
         today = date.today()
         events = [
@@ -293,10 +291,117 @@ def seed() -> None:
                 "criteria": [("Technical", "Working demo", 100)],
                 "problems": [],
             },
+            {
+                "name": "NeuroGrid Autonomous AI Challenge",
+                "short": "Build multi-agent autonomous systems, embodied intelligence, and robotics workflows.",
+                "desc": "NeuroGrid brings together researchers and developers to create autonomous agent swarms and embodied AI that tackle high-stakes navigation and synthesis.",
+                "banner": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80",
+                "organizer": "NVIDIA Inception & AI Labs",
+                "start": today + timedelta(days=18),
+                "end": today + timedelta(days=21),
+                "reg": today + timedelta(days=15),
+                "location": "Hybrid (San Francisco + Online)",
+                "domains": ["AI/ML", "Robotics", "Cloud"],
+                "status": HackathonStatus.published,
+                "rules": "Teams of 2–4. Open-source models allowed. Hardware simulators provided. 48-hour continuous build window.",
+                "criteria": [
+                    ("Technical depth", "Sound architecture and agent reasoning robustness", 35),
+                    ("Autonomy & Safety", "Deterministic fail-safes and guardrails", 25),
+                    ("System Feasibility", "Benchmarked inference latency and resource efficiency", 20),
+                    ("Demo & Benchmark", "Reproducible live demo and scenario testing", 20),
+                ],
+                "problems": [
+                    {
+                        "code": "NG-01",
+                        "title": "Autonomous Drone Pathfinding in Degraded GPS",
+                        "domain": "Robotics",
+                        "statement": "Emergency inspection drones frequently lose GNSS lock in urban canyons and collapsed indoor structures.",
+                        "description": "Design an onboard vision-inertial odometry and obstacle avoidance pipeline capable of mapping unseen terrain.",
+                        "target_users": "Search and rescue roboticists, municipal infrastructure inspectors",
+                        "constraints": "Compute budget bounded by Jetson Orin Nano specs (15W). Must run at >= 20 FPS.",
+                        "expected_outcome": "Simulation benchmark showing collision-free trajectory under simulated 100% GPS outage.",
+                        "evaluation": "Path optimality, compute budget compliance, and edge failure recovery.",
+                        "tech": "Python, PyTorch, ROS2, computer vision",
+                    }
+                ],
+            },
+            {
+                "name": "Web3 BUIDL Global Summit 2026",
+                "short": "48-hour global sprint building high-throughput DeFi, zero-knowledge primitives, and verifiable compute.",
+                "desc": "The premier Web3 developer competition uniting protocol architects, smart contract auditors, and cryptographic builders to redefine open financial infrastructure.",
+                "banner": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1600&q=80",
+                "organizer": "Ethereum Foundation & Polygon Labs",
+                "start": today + timedelta(days=35),
+                "end": today + timedelta(days=37),
+                "reg": today + timedelta(days=31),
+                "location": "Online (Worldwide)",
+                "domains": ["Web3", "Security", "FinTech"],
+                "status": HackathonStatus.published,
+                "rules": "Teams of 2–4. All smart contracts must be publicly verified on testnet. No copied fork repositories.",
+                "criteria": [
+                    ("Smart Contract Security", "Defensive patterns, gas efficiency, and formal verification", 30),
+                    ("Practical Utility", "Solves a tangible user or liquidity bottleneck", 30),
+                    ("Architecture & ZK", "Cryptographic soundness and modular design", 20),
+                    ("Presentation & UX", "User onboarding simplicity and clean web3 wallet UX", 20),
+                ],
+                "problems": [
+                    {
+                        "code": "W3-01",
+                        "title": "Zero-Knowledge Identity Verification for Micropayments",
+                        "domain": "Web3",
+                        "statement": "Web3 applications struggle with Sybil attacks without compromising end-user privacy through invasive KYC.",
+                        "description": "Develop a lightweight zk-SNARK proof system that proves unique humanity and jurisdiction compliance without revealing addresses.",
+                        "target_users": "DeFi protocol DAOs, creator platforms, digital identity collectives",
+                        "constraints": "Proof generation time < 2 seconds in mobile browser environment.",
+                        "expected_outcome": "End-to-end demo verifying identity off-chain and validating on-chain in smart contract.",
+                        "evaluation": "Proof verification gas cost, client-side proving speed, and cryptographic soundness.",
+                        "tech": "TypeScript, Solidity, Circom, React",
+                    }
+                ],
+            },
+            {
+                "name": "CyberShield Zero-Trust Sprint",
+                "short": "Defend critical infrastructure, automate incident response, and trace supply chain vulnerabilities.",
+                "desc": "A frontline defensive security hackathon focused on automated threat hunting, software bill of materials (SBOM) auditing, and zero-trust cloud network policy generation.",
+                "banner": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1600&q=80",
+                "organizer": "Cloudflare & CyberSecurity Alliance",
+                "start": today + timedelta(days=50),
+                "end": today + timedelta(days=52),
+                "reg": today + timedelta(days=46),
+                "location": "Delhi NCR + Hybrid",
+                "domains": ["Cybersecurity", "Cloud", "AI/ML"],
+                "status": HackathonStatus.published,
+                "rules": "Teams of 2–4. Defensive and auditing tools only. No offensive scanning of unauthorized infrastructure.",
+                "criteria": [
+                    ("Defensive Efficacy", "Accuracy of threat detection and false-positive minimization", 35),
+                    ("Detection Latency", "Speed of telemetry analysis under high event throughput", 25),
+                    ("Tool Usability", "Actionable SOC alerts and clear mitigation playbooks", 20),
+                    ("Documentation", "Rigorous threat model and reproduction guidelines", 20),
+                ],
+                "problems": [
+                    {
+                        "code": "CS-01",
+                        "title": "Real-Time Supply Chain Package Poisoning Detector",
+                        "domain": "Cybersecurity",
+                        "statement": "Open-source package registries face typosquatting and malicious post-install script injections.",
+                        "description": "Build an automated analyzer that intercepts package installation hooks, checks AST anomalies, and alerts CI/CD pipelines before execution.",
+                        "target_users": "DevSecOps teams, open-source maintainers, security engineers",
+                        "constraints": "Must add < 1.5 seconds overhead to typical build pipelines.",
+                        "expected_outcome": "A CLI and GitHub Action that quarantines suspicious package versions with an explainable risk score.",
+                        "evaluation": "Detection rate on test suite of poisoned packages, speed, and reporting clarity.",
+                        "tech": "Python, static analysis, AST parsers, container security",
+                    }
+                ],
+            },
         ]
 
         created_hackathons: list[Hackathon] = []
         for event in events:
+            existing = db.scalar(select(Hackathon).where(Hackathon.name == event["name"]))
+            if existing:
+                created_hackathons.append(existing)
+                continue
+
             hackathon = Hackathon(
                 name=event["name"],
                 slug=unique_slug(db, event["name"]),
@@ -338,32 +443,35 @@ def seed() -> None:
         db.flush()
 
         pulse = created_hackathons[0]
-        team = Team(
-            hackathon_id=pulse.id,
-            name="Signal Room",
-            invite_code=generate_invite_code(db),
-            leader_id=users["aditi@hacknova.dev"].id,
-        )
-        db.add(team)
-        db.flush()
-        db.add_all(
-            [
-                TeamMember(team_id=team.id, user_id=users["aditi@hacknova.dev"].id, member_role="Backend Lead", status=MemberStatus.active),
-                TeamMember(team_id=team.id, user_id=users["rahul@hacknova.dev"].id, member_role="Frontend", status=MemberStatus.active),
-            ]
-        )
-        db.add(
-            TeamProblemSelection(
-                team_id=team.id,
-                problem_id=pulse.problems[0].id,
-                selected_by=users["aditi@hacknova.dev"].id,
+        existing_team = db.scalar(select(Team).where(Team.name == "Signal Room"))
+        if not existing_team and "aditi@hacknova.dev" in users:
+            team = Team(
+                hackathon_id=pulse.id,
+                name="Signal Room",
+                invite_code=generate_invite_code(db),
+                leader_id=users["aditi@hacknova.dev"].id,
             )
-        )
+            db.add(team)
+            db.flush()
+            db.add_all(
+                [
+                    TeamMember(team_id=team.id, user_id=users["aditi@hacknova.dev"].id, member_role="Backend Lead", status=MemberStatus.active),
+                    TeamMember(team_id=team.id, user_id=users["rahul@hacknova.dev"].id, member_role="Frontend", status=MemberStatus.active),
+                ]
+            )
+            db.add(
+                TeamProblemSelection(
+                    team_id=team.id,
+                    problem_id=pulse.problems[0].id,
+                    selected_by=users["aditi@hacknova.dev"].id,
+                )
+            )
+            print(f"Demo team invite code: {team.invite_code}")
+
         db.commit()
         print("Seed complete.")
         print("Admin: admin@hacknova.dev / Admin@12345")
         print("Students: aditi@hacknova.dev, rahul@hacknova.dev, meera@hacknova.dev, kabir@hacknova.dev / Student@123")
-        print(f"Demo team invite code: {team.invite_code}")
     finally:
         db.close()
 

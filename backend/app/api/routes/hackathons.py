@@ -225,6 +225,8 @@ def list_hackathons(
             or_(
                 Hackathon.name.ilike(like),
                 Hackathon.short_description.ilike(like),
+                Hackathon.organizer.ilike(like),
+                Hackathon.location.ilike(like),
                 domain_match,
             )
         )

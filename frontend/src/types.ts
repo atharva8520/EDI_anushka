@@ -542,3 +542,36 @@ export interface AIFeedbackSummary {
   }>;
 }
 
+export interface CompanyOrganizer {
+  id: string;
+  name: string;
+  slug: string;
+  logo: string;
+  industry: string;
+  type: "Enterprise" | "Startup" | "University" | "Foundation";
+  description: string;
+  verified: boolean;
+  website_url: string;
+  location: string;
+  hackathons_hosted: number;
+  active_events: number;
+  total_prize_awarded: string;
+  domains: string[];
+}
+
+export interface ProjectShowcaseItem {
+  id: string;
+  title: string;
+  tagline: string;
+  hackathon_name: string;
+  award: string;
+  team_name: string;
+  members: string[];
+  domain: string;
+  tech_stack: string[];
+  github_url?: string;
+  demo_url?: string;
+  thumbnail: string;
+  stars: number;
+}
+

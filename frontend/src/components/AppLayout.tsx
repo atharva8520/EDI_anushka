@@ -11,6 +11,9 @@ import {
   LogOut,
   Menu,
   X,
+  Building2,
+  Trophy,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Logo } from "./Logo";
@@ -52,11 +55,14 @@ export function AppLayout() {
 
   const navItems = [
     { label: "Dashboard", href: "/app", icon: LayoutDashboard, exact: true },
-    { label: "Profile", href: "/app/profile", icon: User },
     { label: "Hackathons", href: "/app/hackathons", icon: Compass },
+    { label: "Companies", href: "/app/companies", icon: Building2 },
+    { label: "Showcase", href: "/app/projects", icon: Trophy },
+    { label: "Host Event", href: "/app/host", icon: Sparkles },
     { label: "My Team", href: "/app/team", icon: Users },
     { label: "Invites", href: "/app/invites", icon: Mail },
     { label: "Project Workspace", href: "/app/workspace", icon: FolderKanban },
+    { label: "Profile", href: "/app/profile", icon: User },
   ];
 
   if (role === "admin") {
