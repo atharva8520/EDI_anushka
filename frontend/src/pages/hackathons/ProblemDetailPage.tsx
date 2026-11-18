@@ -10,11 +10,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
-import type { ProblemDetail, HackathonDetail, TeamWorkspace } from "../../types";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
 import { Card, Skeleton, ErrorState } from "../../components/States";
 import { useAuth } from "../../context/AuthContext";
+import type { HackathonDetail, ProblemDetail, MyTeamItem } from "../../types";
 
 export function ProblemDetailPage() {
   const { id: hackathonId, problemId } = useParams<{ id: string; problemId: string }>();
@@ -22,7 +22,7 @@ export function ProblemDetailPage() {
 
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
-  const [myTeam, setMyTeam] = useState<TeamWorkspace | null>(null);
+  const [myTeamInHackathon, setMyTeamInHackathon] = useState<MyTeamItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,15 +41,16 @@ export function ProblemDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const [pRes, hRes, teamRes] = await Promise.all([
+      const [pRes, hRes, teamsRes] = await Promise.all([
         api.get<ProblemDetail>(`/problems/${pId}`),
         api.get<HackathonDetail>(`/hackathons/${hId}`),
-        api.get<TeamWorkspace | null>("/teams/mine").catch(() => ({ data: null })),
+        api.get<MyTeamItem[]>("/teams/mine/all").catch(() => ({ data: [] as MyTeamItem[] })),
       ]);
 
       setProblem(pRes.data);
       setHackathon(hRes.data);
-      setMyTeam(teamRes.data);
+      const matched = (teamsRes.data || []).find((t) => t.hackathon_id === hId);
+      setMyTeamInHackathon(matched || null);
     } catch (err) {
       setError(apiError(err, "Failed to load problem statement."));
     } finally {
@@ -58,21 +59,22 @@ export function ProblemDetailPage() {
   }
 
   async function handleSelectProblem() {
-    if (!myTeam || !problem) return;
+    if (!myTeamInHackathon || !problem) return;
     setSelecting(true);
     setSelectError(null);
     setSelectSuccess(null);
 
     try {
-      await api.post(`/teams/${myTeam.team.id}/problem`, {
+      await api.post(`/teams/${myTeamInHackathon.id}/problem`, {
         problem_id: problem.id,
       });
 
       setSelectSuccess("Problem statement successfully selected for your team!");
 
       // Refresh team data to update selected_problem
-      const updatedTeam = await api.get<TeamWorkspace | null>("/teams/mine");
-      setMyTeam(updatedTeam.data);
+      const teamsRes = await api.get<MyTeamItem[]>("/teams/mine/all");
+      const matched = (teamsRes.data || []).find((t) => t.hackathon_id === hackathonId);
+      setMyTeamInHackathon(matched || null);
     } catch (err) {
       setSelectError(apiError(err, "Failed to select this problem. Only the team leader can select a problem."));
     } finally {
@@ -110,9 +112,9 @@ export function ProblemDetailPage() {
   }
 
   // Check team and leader eligibility
-  const isInThisHackathon = myTeam?.team.hackathon_id === hackathon.id;
-  const isTeamLeader = isInThisHackathon && (myTeam?.team.is_leader || myTeam?.team.leader_id === profile?.id);
-  const isCurrentlySelected = isInThisHackathon && myTeam?.team.selected_problem?.id === problem.id;
+  const isInThisHackathon = !!myTeamInHackathon;
+  const isTeamLeader = isInThisHackathon && (myTeamInHackathon.is_leader || myTeamInHackathon.leader_id === profile?.id);
+  const isCurrentlySelected = isInThisHackathon && myTeamInHackathon.selected_problem?.id === problem.id;
 
   return (
     <div className="flex-1 bg-canvas text-ink">
@@ -138,7 +140,7 @@ export function ProblemDetailPage() {
             </span>
             <Badge tone="primary">{problem.domain}</Badge>
             {isCurrentlySelected ? (
-              <Badge tone="success">Selected by your team ({myTeam?.team.name})</Badge>
+              <Badge tone="success">Selected by your team ({myTeamInHackathon?.name})</Badge>
             ) : null}
           </div>
 
@@ -181,7 +183,7 @@ export function ProblemDetailPage() {
                     <Sparkles className="h-4 w-4" /> Team Leader Actions
                   </div>
                   <p className="mt-1 text-xs text-mute">
-                    As leader of <strong>{myTeam?.team.name}</strong>, you can lock this problem statement for your sprint.
+                    As leader of <strong>{myTeamInHackathon?.name}</strong>, you can lock this problem statement for your sprint.
                   </p>
                 </div>
 
@@ -206,7 +208,7 @@ export function ProblemDetailPage() {
           ) : isInThisHackathon ? (
             <Card className="p-5 text-xs text-mute flex items-center justify-between">
               <div>
-                <span>You are on team <strong>{myTeam?.team.name}</strong>. Only your team leader (<strong>{myTeam?.team.leader_name}</strong>) can select a problem.</span>
+                <span>You are on team <strong>{myTeamInHackathon?.name}</strong>. Only your team leader (<strong>{myTeamInHackathon?.leader_name}</strong>) can select a problem.</span>
               </div>
               {isCurrentlySelected ? (
                 <Badge tone="success">Selected by your squad</Badge>

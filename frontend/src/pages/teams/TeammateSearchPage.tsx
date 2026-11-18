@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Search, Plus, Check, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import type { StudentSearchItem, TeamWorkspace } from "../../types";
@@ -13,6 +13,9 @@ import { PageIntro } from "../../components/PageIntro";
 const PAGE_SIZE = 12;
 
 export function TeammateSearchPage() {
+  const [searchParams] = useSearchParams();
+  const teamParam = searchParams.get("team");
+
   const [students, setStudents] = useState<StudentSearchItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,13 +37,14 @@ export function TeammateSearchPage() {
 
   // Load user's team info
   useEffect(() => {
+    const url = teamParam ? `/teams/mine?team=${teamParam}` : "/teams/mine";
     api
-      .get<TeamWorkspace | null>("/teams/mine")
+      .get<TeamWorkspace | null>(url)
       .then((res) => {
         setMyTeam(res.data);
       })
       .catch(() => {});
-  }, []);
+  }, [teamParam]);
 
   const fetchStudents = useCallback(() => {
     setLoading(true);
