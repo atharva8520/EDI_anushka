@@ -16,7 +16,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
-import type { HackathonDetail, ProblemSummary, TeamWorkspace } from "../../types";
+import type { HackathonDetail, ProblemSummary, MyTeamItem } from "../../types";
 import { Button } from "../../components/Button";
 import { Badge, statusTone } from "../../components/Badge";
 import { Card, Skeleton, ErrorState } from "../../components/States";
@@ -28,7 +28,7 @@ export function HackathonDetailPage() {
 
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
-  const [myTeam, setMyTeam] = useState<TeamWorkspace | null>(null);
+  const [myTeamInHackathon, setMyTeamInHackathon] = useState<MyTeamItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,15 +42,16 @@ export function HackathonDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const [hRes, pRes, teamRes] = await Promise.all([
+      const [hRes, pRes, teamsRes] = await Promise.all([
         api.get<HackathonDetail>(`/hackathons/${hackathonId}`),
         api.get<ProblemSummary[]>(`/hackathons/${hackathonId}/problems`),
-        api.get<TeamWorkspace | null>("/teams/mine").catch(() => ({ data: null })),
+        api.get<MyTeamItem[]>("/teams/mine/all").catch(() => ({ data: [] as MyTeamItem[] })),
       ]);
 
       setHackathon(hRes.data);
       setProblems(pRes.data);
-      setMyTeam(teamRes.data);
+      const matched = (teamsRes.data || []).find((t) => t.hackathon_id === hackathonId);
+      setMyTeamInHackathon(matched || null);
     } catch (err) {
       setError(apiError(err, "Failed to load hackathon details."));
     } finally {
@@ -90,7 +91,7 @@ export function HackathonDetailPage() {
     );
   }
 
-  const hasTeamInThisHackathon = myTeam?.team.hackathon_id === hackathon.id;
+  const hasTeamInThisHackathon = !!myTeamInHackathon;
   const isDeadlinePassed = new Date() > new Date(hackathon.registration_deadline);
   const isCompleted = hackathon.status === "completed";
 
@@ -209,7 +210,7 @@ export function HackathonDetailPage() {
               {hasTeamInThisHackathon ? (
                 <>
                   <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
-                    <CheckCircle2 className="h-5 w-5" /> Registered with team "{myTeam?.team.name}"
+                    <CheckCircle2 className="h-5 w-5" /> Registered with team "{myTeamInHackathon?.name}"
                   </div>
                   <p className="mt-1 text-xs text-mute">
                     You and your teammates are participating in this hackathon.
@@ -236,7 +237,7 @@ export function HackathonDetailPage() {
 
             <div>
               {hasTeamInThisHackathon ? (
-                <Link to="/app/team">
+                <Link to={`/app/team?team=${myTeamInHackathon?.id}`}>
                   <Button variant="primary" className="text-xs">
                     Go to my team <ArrowLeft className="h-4 w-4 rotate-180" />
                   </Button>
@@ -282,7 +283,7 @@ export function HackathonDetailPage() {
               <div className="space-y-4">
                 {problems.map((p) => {
                   const isSelectedByMyTeam =
-                    hasTeamInThisHackathon && myTeam?.team.selected_problem?.id === p.id;
+                    hasTeamInThisHackathon && myTeamInHackathon?.selected_problem?.id === p.id;
 
                   return (
                     <Card

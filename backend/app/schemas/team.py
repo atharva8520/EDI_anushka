@@ -110,3 +110,24 @@ class TeamWorkspaceOut(BaseModel):
     team: TeamOut
     skill_map: list[SkillMapItem]
     missing_capabilities: list[str]
+
+
+class MyTeamItemOut(BaseModel):
+    id: UUID
+    name: str
+    invite_code: str
+    hackathon_id: UUID
+    hackathon_name: str
+    leader_id: UUID
+    leader_name: str
+    is_leader: bool
+    member_role: str
+    active_member_count: int
+    team_size_min: int
+    team_size_max: int
+    is_ready: bool
+    is_full: bool
+    selected_problem: SelectedProblemOut | None
+    created_at: datetime
+    joined_at: datetime
+

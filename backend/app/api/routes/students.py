@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -6,7 +8,7 @@ from app.core.deps import get_current_user
 from app.database.session import get_db
 from app.models.profile import Availability, Profile, UserDomainInterest, UserSkill
 from app.models.skill import Skill
-from app.models.team import MemberStatus, TeamMember
+from app.models.team import MemberStatus, Team, TeamMember
 from app.models.user import User, UserRole
 from app.schemas.profile import UserSkillOut
 from app.schemas.student import StudentSearchItem
@@ -17,6 +19,7 @@ router = APIRouter(tags=["students"])
 @router.get("/students", response_model=list[StudentSearchItem])
 def search_students(
     response: Response,
+    team_id: UUID | None = None,
     q: str | None = None,
     skill: str | None = None,
     domain: str | None = None,
@@ -29,6 +32,21 @@ def search_students(
     if user.role != UserRole.student:
         raise HTTPException(status_code=403, detail="Only students can browse teammates")
 
+    target_team = None
+    if team_id is not None:
+        target_team = db.get(Team, team_id)
+        if not target_team:
+            raise HTTPException(status_code=404, detail="Team not found")
+        caller_membership = db.scalar(
+            select(TeamMember).where(
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == user.id,
+                TeamMember.status == MemberStatus.active,
+            )
+        )
+        if not caller_membership and user.role != UserRole.admin:
+            raise HTTPException(status_code=403, detail="You do not belong to this team")
+
     # Base query: active students only, excluding caller
     stmt = select(User).where(
         User.role == UserRole.student,
@@ -36,16 +54,30 @@ def search_students(
         User.id != user.id,
     )
 
-    # Exclude users with an active team membership
-    has_active_team = (
-        select(1)
-        .where(
-            TeamMember.user_id == User.id,
-            TeamMember.status == MemberStatus.active,
+    if target_team:
+        has_active_team_in_hackathon = (
+            select(1)
+            .select_from(TeamMember)
+            .join(Team, TeamMember.team_id == Team.id)
+            .where(
+                TeamMember.user_id == User.id,
+                TeamMember.status == MemberStatus.active,
+                Team.hackathon_id == target_team.hackathon_id,
+            )
+            .exists()
         )
-        .exists()
-    )
-    stmt = stmt.where(~has_active_team)
+        stmt = stmt.where(~has_active_team_in_hackathon)
+    else:
+        # Exclude users with an active team membership
+        has_active_team = (
+            select(1)
+            .where(
+                TeamMember.user_id == User.id,
+                TeamMember.status == MemberStatus.active,
+            )
+            .exists()
+        )
+        stmt = stmt.where(~has_active_team)
 
     if q and q.strip():
         stmt = stmt.where(User.full_name.ilike(f"%{q.strip()}%"))

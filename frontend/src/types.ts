@@ -154,6 +154,33 @@ export interface TeamWorkspace {
   missing_capabilities: string[];
 }
 
+export interface MyTeamItem {
+  id: string;
+  name: string;
+  invite_code: string;
+  hackathon_id: string;
+  hackathon_name: string;
+  leader_id: string;
+  leader_name: string;
+  is_leader: boolean;
+  member_role: string;
+  active_member_count: number;
+  team_size_min: number;
+  team_size_max: number;
+  is_ready: boolean;
+  is_full: boolean;
+  selected_problem: {
+    id: string;
+    code: string;
+    title: string;
+    domain: string;
+    description: string;
+    selected_at: string;
+  } | null;
+  created_at: string;
+  joined_at: string;
+}
+
 export interface Invite {
   id: string;
   team_id: string;
@@ -184,19 +211,25 @@ export interface StudentSearchItem {
   domains: string[];
 }
 
+export interface ActiveHackathonPanel {
+  hackathon_id: string;
+  hackathon_name: string;
+  status: string;
+  deadline: string;
+  team_id?: string | null;
+  team_name: string | null;
+  problem_title: string | null;
+  member_count: number;
+  progress: number;
+  team_link?: string;
+  workspace_link?: string;
+}
+
 export interface StudentDashboard {
   greeting_name: string;
   profile_completion: number;
-  active: {
-    hackathon_id: string;
-    hackathon_name: string;
-    status: string;
-    deadline: string;
-    team_name: string | null;
-    problem_title: string | null;
-    member_count: number;
-    progress: number;
-  } | null;
+  active: ActiveHackathonPanel | null;
+  active_teams?: ActiveHackathonPanel[];
   insights: { key: string; label: string; status: string; detail: string }[];
   next_action: { title: string; description: string; cta: string; href: string };
 }

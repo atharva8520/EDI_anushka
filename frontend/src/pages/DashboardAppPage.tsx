@@ -83,6 +83,71 @@ export function DashboardAppPage() {
         {/* Active Hackathon Panel (if participating) */}
         {loading ? (
           <Skeleton className="mt-8 h-40 w-full rounded-card" />
+        ) : dashboardData?.active_teams && dashboardData.active_teams.length > 1 ? (
+          <div className="mt-8 space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+              Your Active Squads ({dashboardData.active_teams.length})
+            </h2>
+            <div className="grid grid-cols-1 gap-4">
+              {dashboardData.active_teams.map((t) => (
+                <Card
+                  key={t.team_id || t.hackathon_id}
+                  className="overflow-hidden border-primary/30 p-6 bg-gradient-to-r from-primary/5 via-white to-accent-blue/5 shadow-lift"
+                >
+                  <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          <Sparkles className="h-3.5 w-3.5" /> Active Event
+                        </span>
+                        <Badge tone={statusTone(t.status)}>{t.status.toUpperCase()}</Badge>
+                      </div>
+
+                      <h2 className="text-lg md:text-xl font-bold tracking-tight text-ink">
+                        {t.hackathon_name}
+                      </h2>
+
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-mute">
+                        {t.team_name ? (
+                          <span className="flex items-center gap-1.5 font-semibold text-ink">
+                            <Users className="h-4 w-4 text-primary" /> Squad: {t.team_name} ({t.member_count} members)
+                          </span>
+                        ) : null}
+
+                        {t.problem_title ? (
+                          <span className="flex items-center gap-1.5 text-ink font-medium">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Challenge: {t.problem_title}
+                          </span>
+                        ) : null}
+
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4 text-amber-600" /> Deadline: {t.deadline}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link to={`/app/hackathons/${t.hackathon_id}`}>
+                        <Button variant="secondary" className="text-xs">
+                          Event
+                        </Button>
+                      </Link>
+                      <Link to={t.team_link || `/app/team?team=${t.team_id}`}>
+                        <Button variant="secondary" className="text-xs">
+                          Team Hub
+                        </Button>
+                      </Link>
+                      <Link to={t.workspace_link || `/app/workspace?team=${t.team_id}`}>
+                        <Button variant="primary" className="text-xs gap-1.5">
+                          Workspace <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
         ) : dashboardData?.active ? (
           <Card className="mt-8 overflow-hidden border-primary/30 p-6 md:p-8 bg-gradient-to-r from-primary/5 via-white to-accent-blue/5 shadow-lift">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">

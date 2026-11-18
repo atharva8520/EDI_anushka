@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   FolderKanban,
   Kanban,
@@ -25,7 +25,9 @@ import type {
   Task,
   Milestone,
   TaskStatus,
+  MyTeamItem,
 } from "../../types";
+import { TeamSwitcher } from "../../components/TeamSwitcher";
 import { PageIntro } from "../../components/PageIntro";
 import { Button } from "../../components/Button";
 import { Card, EmptyState, ErrorState, Skeleton } from "../../components/States";
@@ -46,6 +48,8 @@ type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "check
 
 export function WorkspacePage() {
   const { profile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const teamParam = searchParams.get("team");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +57,7 @@ export function WorkspacePage() {
 
   // Core state
   const [teamWorkspace, setTeamWorkspace] = useState<TeamWorkspace | null>(null);
+  const [allTeams, setAllTeams] = useState<MyTeamItem[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [summary, setSummary] = useState<ProjectSummary | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -86,10 +91,17 @@ export function WorkspacePage() {
       setError(null);
       setActionError(null);
 
-      // 1. Fetch team workspace
-      const teamRes = await api.get<TeamWorkspace | null>("/teams/mine");
+      const teamUrl = teamParam ? `/teams/mine?team=${teamParam}` : "/teams/mine";
+      const projUrl = teamParam ? `/projects/mine?team=${teamParam}` : "/projects/mine";
+
+      // 1. Fetch team workspace & all active teams in parallel
+      const [teamRes, allTeamsRes] = await Promise.all([
+        api.get<TeamWorkspace | null>(teamUrl),
+        api.get<MyTeamItem[]>("/teams/mine/all").catch(() => ({ data: [] as MyTeamItem[] })),
+      ]);
       const tw = teamRes.data;
       setTeamWorkspace(tw);
+      setAllTeams(allTeamsRes.data || []);
 
       if (!tw || !tw.team) {
         setProject(null);
@@ -97,7 +109,7 @@ export function WorkspacePage() {
       }
 
       // 2. Fetch project
-      const projRes = await api.get<Project | null>("/projects/mine");
+      const projRes = await api.get<Project | null>(projUrl);
       const proj = projRes.data;
       setProject(proj);
 
@@ -120,7 +132,7 @@ export function WorkspacePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [teamParam]);
 
   useEffect(() => {
     loadWorkspaceData();
@@ -288,6 +300,7 @@ export function WorkspacePage() {
   if (!teamWorkspace || !teamWorkspace.team) {
     return (
       <div className="space-y-6">
+        <TeamSwitcher activeTeams={allTeams} basePath="/app/workspace" />
         <PageIntro
           kicker="Workspace"
           title="Project Workspace"
@@ -313,6 +326,7 @@ export function WorkspacePage() {
   if (!teamWorkspace.team.selected_problem) {
     return (
       <div className="space-y-6">
+        <TeamSwitcher activeTeams={allTeams} currentTeamId={teamWorkspace.team.id} basePath="/app/workspace" />
         <PageIntro
           kicker={teamWorkspace.team.name}
           title="Project Workspace"
@@ -338,6 +352,7 @@ export function WorkspacePage() {
   if (!project) {
     return (
       <div className="space-y-6">
+        <TeamSwitcher activeTeams={allTeams} currentTeamId={teamWorkspace.team.id} basePath="/app/workspace" />
         <PageIntro
           kicker={teamWorkspace.team.name}
           title="Initialize Project Workspace"
@@ -408,6 +423,7 @@ export function WorkspacePage() {
   // Branch 4: Full Active Project Workspace
   return (
     <div className="space-y-6">
+      <TeamSwitcher activeTeams={allTeams} currentTeamId={teamWorkspace.team.id} basePath="/app/workspace" />
       {/* Workspace Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

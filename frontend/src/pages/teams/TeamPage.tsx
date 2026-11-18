@@ -37,7 +37,9 @@ import type {
   TeamInviteLeader,
   CandidateRecommendation,
   TeammateRecommendationsResponse,
+  MyTeamItem,
 } from "../../types";
+import { TeamSwitcher } from "../../components/TeamSwitcher";
 import { PREFERRED_ROLES } from "../../constants";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
@@ -49,8 +51,10 @@ import { PageIntro } from "../../components/PageIntro";
 export function TeamPage() {
   const [searchParams] = useSearchParams();
   const hackathonParam = searchParams.get("hackathon");
+  const teamParam = searchParams.get("team");
 
   const [workspace, setWorkspace] = useState<TeamWorkspace | null>(null);
+  const [allTeams, setAllTeams] = useState<MyTeamItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,10 +111,14 @@ export function TeamPage() {
   const fetchTeamWorkspace = useCallback(() => {
     setLoading(true);
     setError(null);
-    api
-      .get<TeamWorkspace | null>("/teams/mine")
-      .then((res) => {
-        setWorkspace(res.data);
+    const url = teamParam ? `/teams/mine?team=${teamParam}` : "/teams/mine";
+    Promise.all([
+      api.get<TeamWorkspace | null>(url),
+      api.get<MyTeamItem[]>("/teams/mine/all").catch(() => ({ data: [] as MyTeamItem[] })),
+    ])
+      .then(([wsRes, allRes]) => {
+        setWorkspace(wsRes.data);
+        setAllTeams(allRes.data || []);
       })
       .catch((err) => {
         setError(apiError(err, "Failed to load team workspace"));
@@ -118,7 +126,7 @@ export function TeamPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [teamParam]);
 
   const fetchHackathons = useCallback(() => {
     api
@@ -418,6 +426,7 @@ export function TeamPage() {
   if (!workspace || !workspace.team) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8 space-y-8">
+        <TeamSwitcher activeTeams={allTeams} currentTeamId={undefined} basePath="/app/team" />
         <PageIntro
           kicker="Squad Formation"
           title="Team Hub"
@@ -563,6 +572,8 @@ export function TeamPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 space-y-6">
+      <TeamSwitcher activeTeams={allTeams} currentTeamId={team.id} basePath="/app/team" />
+
       {actionSuccess ? (
         <div className="flex items-center gap-2 rounded-[12px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
           <Check className="h-4 w-4 shrink-0 text-emerald-600" />

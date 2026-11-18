@@ -838,11 +838,29 @@ def test_e2e_module3_walkthrough(client):
     assert full_inv.status_code == 409
     assert "maximum size" in full_inv.json()["detail"].lower()
 
-    # 7. TRYING TO JOIN A SECOND TEAM: Rahul tries to join another team via join_team -> 409
-    join_2nd = test_client.post(
+    # 7. TRYING TO JOIN A SECOND TEAM:
+    # First, verify that a fake code returns 404 under the lookup-first rule
+    join_fake = test_client.post(
         "/api/teams/join",
         headers=rahul_headers,
         json={"invite_code": "ANYCODE1", "member_role": "Member"},
+    )
+    assert join_fake.status_code == 404
+
+    # Create a REAL second team of the SAME hackathon
+    c_second = test_client.post(
+        "/api/teams",
+        headers=outsider_headers,
+        json={"hackathon_id": str(hackathon.id), "name": "Second Squad", "member_role": "Team Lead"},
+    )
+    assert c_second.status_code == 201
+    second_code = c_second.json()["invite_code"]
+
+    # Rahul tries to join the REAL second team of the SAME hackathon -> 409
+    join_2nd = test_client.post(
+        "/api/teams/join",
+        headers=rahul_headers,
+        json={"invite_code": second_code, "member_role": "Member"},
     )
     assert join_2nd.status_code == 409
     assert "already belong" in join_2nd.json()["detail"].lower()

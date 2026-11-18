@@ -207,19 +207,35 @@ def create_project(
 
 @router.get("/projects/mine", response_model=ProjectOut | None)
 def my_project(
+    team: UUID | None = Query(None),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    membership = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
-    )
-    if not membership:
-        return None
+    if team is not None:
+        membership = db.scalar(
+            select(TeamMember).where(
+                TeamMember.user_id == user.id,
+                TeamMember.team_id == team,
+                TeamMember.status == MemberStatus.active,
+            )
+        )
+        if not membership:
+            raise HTTPException(status_code=404, detail="Team not found or you are not an active member")
+        target_team_id = membership.team_id
+    else:
+        membership = db.scalar(
+            select(TeamMember)
+            .where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
+            .order_by(TeamMember.joined_at.desc(), TeamMember.id.desc())
+        )
+        if not membership:
+            return None
+        target_team_id = membership.team_id
 
     project = db.scalar(
         select(Project)
         .options(*PROJECT_LOAD)
-        .where(Project.team_id == membership.team_id)
+        .where(Project.team_id == target_team_id)
     )
     if not project:
         return None

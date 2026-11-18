@@ -1,7 +1,7 @@
 from datetime import date, datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -16,6 +16,7 @@ from app.schemas.team import (
     InviteCreate,
     InviteOut,
     MemberRoleUpdate,
+    MyTeamItemOut,
     ProblemSelect,
     TeamCreate,
     TeamInviteLeaderOut,
@@ -54,15 +55,71 @@ def _has_active_leader(team: Team) -> bool:
 
 
 @router.get("/teams/mine", response_model=TeamWorkspaceOut | None)
-def my_team(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    membership = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
-    )
-    if not membership:
-        return None
-    team = _load_team(db, membership.team_id)
-    skill_map, missing = team_skill_map(team)
-    return TeamWorkspaceOut(team=serialize_team(team, user.id), skill_map=skill_map, missing_capabilities=missing)
+def my_team(
+    team: UUID | None = Query(None),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if team is not None:
+        membership = db.scalar(
+            select(TeamMember).where(
+                TeamMember.user_id == user.id,
+                TeamMember.team_id == team,
+                TeamMember.status == MemberStatus.active,
+            )
+        )
+        if not membership:
+            raise HTTPException(status_code=404, detail="Team not found or you are not an active member")
+        target_team_id = membership.team_id
+    else:
+        membership = db.scalar(
+            select(TeamMember)
+            .where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
+            .order_by(TeamMember.joined_at.desc(), TeamMember.id.desc())
+        )
+        if not membership:
+            return None
+        target_team_id = membership.team_id
+
+    team_obj = _load_team(db, target_team_id)
+    skill_map, missing = team_skill_map(team_obj)
+    return TeamWorkspaceOut(team=serialize_team(team_obj, user.id), skill_map=skill_map, missing_capabilities=missing)
+
+
+@router.get("/teams/mine/all", response_model=list[MyTeamItemOut])
+def my_teams_all(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    memberships = db.scalars(
+        select(TeamMember)
+        .where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
+        .order_by(TeamMember.joined_at.desc(), TeamMember.id.desc())
+    ).all()
+
+    items: list[MyTeamItemOut] = []
+    for m in memberships:
+        team_obj = _load_team(db, m.team_id)
+        serialized = serialize_team(team_obj, user.id)
+        items.append(
+            MyTeamItemOut(
+                id=team_obj.id,
+                name=team_obj.name,
+                invite_code=team_obj.invite_code,
+                hackathon_id=team_obj.hackathon_id,
+                hackathon_name=team_obj.hackathon.name if team_obj.hackathon else "",
+                leader_id=team_obj.leader_id,
+                leader_name=team_obj.leader.full_name if team_obj.leader else "",
+                is_leader=team_obj.leader_id == user.id,
+                member_role=m.member_role,
+                active_member_count=serialized.active_member_count,
+                team_size_min=serialized.team_size_min,
+                team_size_max=serialized.team_size_max,
+                is_ready=serialized.is_ready,
+                is_full=serialized.is_full,
+                selected_problem=serialized.selected_problem,
+                created_at=team_obj.created_at,
+                joined_at=m.joined_at,
+            )
+        )
+    return items
 
 
 @router.get("/teams/{team_id}", response_model=TeamOut)
@@ -79,10 +136,16 @@ def create_team(payload: TeamCreate, user: User = Depends(get_current_user), db:
     if user.role != UserRole.student:
         raise HTTPException(status_code=403, detail="Only students can create teams")
     existing = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
+        select(TeamMember)
+        .join(Team, TeamMember.team_id == Team.id)
+        .where(
+            TeamMember.user_id == user.id,
+            TeamMember.status == MemberStatus.active,
+            Team.hackathon_id == payload.hackathon_id,
+        )
     )
     if existing:
-        raise HTTPException(status_code=409, detail="You already belong to a team. Leave it before creating another.")
+        raise HTTPException(status_code=409, detail="You already belong to a team in this hackathon. Leave it before creating another.")
     hackathon = db.get(Hackathon, payload.hackathon_id)
     if not hackathon or hackathon.status not in {HackathonStatus.published, HackathonStatus.active}:
         raise HTTPException(status_code=400, detail="You can only create teams for published or active hackathons")
@@ -104,7 +167,7 @@ def create_team(payload: TeamCreate, user: User = Depends(get_current_user), db:
         name=clean_name,
         invite_code=generate_invite_code(db),
         leader_id=user.id,
-        members=[TeamMember(user_id=user.id, member_role=payload.member_role, status=MemberStatus.active)],
+        members=[TeamMember(user_id=user.id, member_role=payload.member_role, status=MemberStatus.active, joined_at=datetime.now(timezone.utc))],
     )
     db.add(team)
     db.commit()
@@ -115,15 +178,22 @@ def create_team(payload: TeamCreate, user: User = Depends(get_current_user), db:
 def join_team(payload: TeamJoin, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != UserRole.student:
         raise HTTPException(status_code=403, detail="Only students can join teams")
-    existing = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
-    )
-    if existing:
-        raise HTTPException(status_code=409, detail="You already belong to a team")
 
     team = db.scalar(select(Team).options(*TEAM_LOAD).where(Team.invite_code == payload.invite_code.upper()))
     if not team:
         raise HTTPException(status_code=404, detail="Invite code is not valid")
+
+    existing = db.scalar(
+        select(TeamMember)
+        .join(Team, TeamMember.team_id == Team.id)
+        .where(
+            TeamMember.user_id == user.id,
+            TeamMember.status == MemberStatus.active,
+            Team.hackathon_id == team.hackathon_id,
+        )
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="You already belong to a team in this hackathon")
 
     if team.hackathon.status not in {HackathonStatus.published, HackathonStatus.active}:
         raise HTTPException(status_code=400, detail="You can only join teams for published or active hackathons")
@@ -139,8 +209,9 @@ def join_team(payload: TeamJoin, user: User = Depends(get_current_user), db: Ses
     if leftover:
         leftover.status = MemberStatus.active
         leftover.member_role = payload.member_role
+        leftover.joined_at = datetime.now(timezone.utc)
     else:
-        db.add(TeamMember(team_id=team.id, user_id=user.id, member_role=payload.member_role, status=MemberStatus.active))
+        db.add(TeamMember(team_id=team.id, user_id=user.id, member_role=payload.member_role, status=MemberStatus.active, joined_at=datetime.now(timezone.utc)))
     db.commit()
     return serialize_team(_load_team(db, team.id), user.id)
 
@@ -299,10 +370,16 @@ def invite_member(
         raise HTTPException(status_code=409, detail="That student is already on the team")
 
     other_team_member = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == invitee.id, TeamMember.status == MemberStatus.active)
+        select(TeamMember)
+        .join(Team, TeamMember.team_id == Team.id)
+        .where(
+            TeamMember.user_id == invitee.id,
+            TeamMember.status == MemberStatus.active,
+            Team.hackathon_id == team.hackathon_id,
+        )
     )
     if other_team_member:
-        raise HTTPException(status_code=409, detail="That student already belongs to an active team")
+        raise HTTPException(status_code=409, detail="That student already belongs to an active team in this hackathon")
 
     existing = db.scalar(
         select(TeamInvite).where(
@@ -405,7 +482,13 @@ def respond_invite(
         raise HTTPException(status_code=409, detail="This team is already at maximum size")
 
     existing = db.scalar(
-        select(TeamMember).where(TeamMember.user_id == user.id, TeamMember.status == MemberStatus.active)
+        select(TeamMember)
+        .join(Team, TeamMember.team_id == Team.id)
+        .where(
+            TeamMember.user_id == user.id,
+            TeamMember.status == MemberStatus.active,
+            Team.hackathon_id == team.hackathon_id,
+        )
     )
     if existing:
         raise HTTPException(status_code=409, detail="Leave your current team before accepting another invite")
@@ -415,8 +498,9 @@ def respond_invite(
     if leftover:
         leftover.status = MemberStatus.active
         leftover.member_role = "Member"
+        leftover.joined_at = datetime.now(timezone.utc)
     else:
-        db.add(TeamMember(team_id=invite.team_id, user_id=user.id, member_role="Member", status=MemberStatus.active))
+        db.add(TeamMember(team_id=invite.team_id, user_id=user.id, member_role="Member", status=MemberStatus.active, joined_at=datetime.now(timezone.utc)))
 
     db.commit()
     return serialize_team(_load_team(db, invite.team_id), user.id)
