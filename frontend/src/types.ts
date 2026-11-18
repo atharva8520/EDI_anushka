@@ -216,6 +216,8 @@ export interface ActiveHackathonPanel {
   hackathon_name: string;
   status: string;
   deadline: string;
+  start_date?: string | null;
+  end_date?: string | null;
   team_id?: string | null;
   team_name: string | null;
   problem_title: string | null;

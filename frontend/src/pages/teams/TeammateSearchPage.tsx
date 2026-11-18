@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, Plus, Check, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { api, apiError } from "../../api/client";
-import type { StudentSearchItem, TeamWorkspace } from "../../types";
+import type { StudentSearchItem, TeamWorkspace, MyTeamItem } from "../../types";
 import { PLATFORM_DOMAINS, AVAILABILITY_OPTIONS } from "../../constants";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
@@ -13,7 +13,7 @@ import { PageIntro } from "../../components/PageIntro";
 const PAGE_SIZE = 12;
 
 export function TeammateSearchPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const teamParam = searchParams.get("team");
 
   const [students, setStudents] = useState<StudentSearchItem[]>([]);
@@ -28,29 +28,50 @@ export function TeammateSearchPage() {
   const [availability, setAvailability] = useState("");
   const [page, setPage] = useState(1);
 
-  // Team state for leader invite capability
+  // Team state for leader invite capability and multi-team selection
+  const [allTeams, setAllTeams] = useState<MyTeamItem[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>(teamParam || "");
   const [myTeam, setMyTeam] = useState<TeamWorkspace | null>(null);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
 
-  // Load user's team info
+  // Load all user teams to allow multi-team leaders to choose target squad
   useEffect(() => {
-    const url = teamParam ? `/teams/mine?team=${teamParam}` : "/teams/mine";
+    api
+      .get<MyTeamItem[]>("/teams/mine/all")
+      .then((res) => {
+        const teams = res.data || [];
+        setAllTeams(teams);
+        if (!selectedTeamId && teams.length > 0) {
+          const leaderTeam = teams.find((t) => t.is_leader);
+          const initialId = teamParam || (leaderTeam ? leaderTeam.id : teams[0].id);
+          setSelectedTeamId(initialId);
+        }
+      })
+      .catch(() => {});
+  }, [teamParam, selectedTeamId]);
+
+  // Load workspace for selected team
+  useEffect(() => {
+    const url = selectedTeamId ? `/teams/mine?team=${selectedTeamId}` : "/teams/mine";
     api
       .get<TeamWorkspace | null>(url)
       .then((res) => {
         setMyTeam(res.data);
       })
       .catch(() => {});
-  }, [teamParam]);
+  }, [selectedTeamId]);
 
   const fetchStudents = useCallback(() => {
     setLoading(true);
     setError(null);
 
     const params = new URLSearchParams();
+    if (selectedTeamId) {
+      params.append("team_id", selectedTeamId);
+    }
     if (q.trim()) params.append("q", q.trim());
     if (skill.trim()) params.append("skill", skill.trim());
     if (domain) params.append("domain", domain);
@@ -75,7 +96,7 @@ export function TeammateSearchPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [q, skill, domain, availability, page]);
+  }, [selectedTeamId, q, skill, domain, availability, page]);
 
   useEffect(() => {
     fetchStudents();
@@ -96,13 +117,14 @@ export function TeammateSearchPage() {
   }
 
   async function handleInvite(student: StudentSearchItem) {
-    if (!myTeam?.team.id) return;
+    const targetTeamId = selectedTeamId || myTeam?.team.id;
+    if (!targetTeamId) return;
     setInvitingId(student.id);
     setInviteError(null);
     setInviteSuccess(null);
 
     try {
-      await api.post(`/teams/${myTeam.team.id}/invites`, {
+      await api.post(`/teams/${targetTeamId}/invites`, {
         invitee_id: student.id,
       });
       setInvitedIds((prev) => new Set(prev).add(student.id));
@@ -114,19 +136,39 @@ export function TeammateSearchPage() {
     }
   }
 
+  const leadingTeams = allTeams.filter((t) => t.is_leader);
   const isLeader = myTeam?.team.is_leader ?? false;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <Link to="/app/team">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link to={selectedTeamId ? `/app/team?team=${selectedTeamId}` : "/app/team"}>
           <Button variant="secondary" className="gap-1.5 text-xs py-1.5">
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to Team Hub
           </Button>
         </Link>
-        {isLeader ? (
+        {leadingTeams.length > 1 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-mute">Inviting for squad:</span>
+            <select
+              value={selectedTeamId}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedTeamId(newId);
+                setSearchParams({ team: newId });
+              }}
+              className="rounded-[10px] border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {leadingTeams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.hackathon_name})
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : isLeader ? (
           <Badge tone="primary">
             Leading: {myTeam?.team.name} ({myTeam?.team.active_member_count}/{myTeam?.team.team_size_max})
           </Badge>

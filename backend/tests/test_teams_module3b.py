@@ -3,7 +3,9 @@ from datetime import date, timedelta
 from uuid import UUID
 
 from app.models.hackathon import Hackathon, HackathonProblem, HackathonStatus
+from app.models.profile import Proficiency, UserSkill
 from app.models.project import ChecklistItem, Milestone, Project, Task
+from app.models.skill import Skill
 from tests.factories import auth_header, create_admin, create_student
 
 
@@ -545,3 +547,304 @@ def test_dashboard_active_members_count_and_multi_team_links(client):
     assert dash2["active"]["workspace_link"] == f"/app/workspace?team={t2['id']}"
     assert dash2["active_teams"][1]["team_link"] == f"/app/team?team={t1['id']}"
     assert dash2["active_teams"][1]["workspace_link"] == f"/app/workspace?team={t1['id']}"
+
+
+def test_same_hackathon_create_join_accept_and_invite_rejected(client):
+    test_client, db = client
+    h1 = make_custom_hackathon(db, "Hack Same Rejections", "hack-same-rejections")
+
+    s1 = create_student(db, "s1_same@test.dev", "Student One")
+    s2 = create_student(db, "s2_same@test.dev", "Student Two")
+    s3 = create_student(db, "s3_same@test.dev", "Student Three")
+
+    h_s1 = auth_header(test_client, "s1_same@test.dev", "Student@123")
+    h_s2 = auth_header(test_client, "s2_same@test.dev", "Student@123")
+    h_s3 = auth_header(test_client, "s3_same@test.dev", "Student@123")
+
+    # 1. S1 creates Team Alpha in H1
+    t_alpha = test_client.post(
+        "/api/teams",
+        headers=h_s1,
+        json={"hackathon_id": str(h1.id), "name": "Team Alpha", "member_role": "Team Lead"},
+    ).json()
+
+    # 2. CREATE REJECTED: S1 tries creating another team in the SAME hackathon H1 -> 409
+    create_dupe = test_client.post(
+        "/api/teams",
+        headers=h_s1,
+        json={"hackathon_id": str(h1.id), "name": "Team Alpha Dupe", "member_role": "Team Lead"},
+    )
+    assert create_dupe.status_code == 409
+    assert "already belong to a team in this hackathon" in create_dupe.json()["detail"].lower()
+
+    # S2 creates Team Beta in H1
+    t_beta = test_client.post(
+        "/api/teams",
+        headers=h_s2,
+        json={"hackathon_id": str(h1.id), "name": "Team Beta", "member_role": "Team Lead"},
+    ).json()
+
+    # 3. JOIN REJECTED: S1 tries joining Team Beta in the SAME hackathon H1 -> 409
+    join_same = test_client.post(
+        "/api/teams/join",
+        headers=h_s1,
+        json={"invite_code": t_beta["invite_code"], "member_role": "Member"},
+    )
+    assert join_same.status_code == 409
+    assert "already belong to a team in this hackathon" in join_same.json()["detail"].lower()
+
+    # 4. INVITE REJECTED: S2 tries inviting S1 (who already has a team in H1) -> 409
+    invite_same = test_client.post(
+        f"/api/teams/{t_beta['id']}/invites",
+        headers=h_s2,
+        json={"email": "s1_same@test.dev"},
+    )
+    assert invite_same.status_code == 409
+    assert "already belongs to an active team in this hackathon" in invite_same.json()["detail"].lower()
+
+    # 5. ACCEPT REJECTED:
+    # S2 invites S3 (who currently has no team) to Team Beta -> 201 Created
+    inv_s3 = test_client.post(
+        f"/api/teams/{t_beta['id']}/invites",
+        headers=h_s2,
+        json={"email": "s3_same@test.dev"},
+    ).json()
+    assert "id" in inv_s3
+
+    # Before accepting, S3 joins Team Alpha in H1
+    join_alpha = test_client.post(
+        "/api/teams/join",
+        headers=h_s3,
+        json={"invite_code": t_alpha["invite_code"], "member_role": "Member"},
+    )
+    assert join_alpha.status_code == 200
+
+    # Now S3 tries to accept invite to Team Beta in the SAME hackathon -> 409
+    accept_same = test_client.post(
+        f"/api/invites/{inv_s3['id']}/respond?accept=true",
+        headers=h_s3,
+    )
+    assert accept_same.status_code == 409
+    assert "leave your current team" in accept_same.json()["detail"].lower()
+
+
+def test_different_hackathon_create_join_accept_and_invite_succeed(client):
+    test_client, db = client
+    h1 = make_custom_hackathon(db, "Hack Diff 1", "hack-diff-1")
+    h2 = make_custom_hackathon(db, "Hack Diff 2", "hack-diff-2")
+    h3 = make_custom_hackathon(db, "Hack Diff 3", "hack-diff-3")
+    h4 = make_custom_hackathon(db, "Hack Diff 4", "hack-diff-4")
+
+    s_main = create_student(db, "s_main@test.dev", "Main Student")
+    s_other2 = create_student(db, "s_other2@test.dev", "Lead Two")
+    s_other3 = create_student(db, "s_other3@test.dev", "Lead Three")
+    s_other4 = create_student(db, "s_other4@test.dev", "Lead Four")
+
+    h_main = auth_header(test_client, "s_main@test.dev", "Student@123")
+    h_other2 = auth_header(test_client, "s_other2@test.dev", "Student@123")
+    h_other3 = auth_header(test_client, "s_other3@test.dev", "Student@123")
+    h_other4 = auth_header(test_client, "s_other4@test.dev", "Student@123")
+
+    # 1. CREATE SUCCEEDS in H1
+    t1 = test_client.post(
+        "/api/teams",
+        headers=h_main,
+        json={"hackathon_id": str(h1.id), "name": "Main Squad 1", "member_role": "Team Lead"},
+    )
+    assert t1.status_code == 201
+
+    # 2. JOIN SUCCEEDS in H2 (different hackathon)
+    t2 = test_client.post(
+        "/api/teams",
+        headers=h_other2,
+        json={"hackathon_id": str(h2.id), "name": "Other Squad 2", "member_role": "Team Lead"},
+    ).json()
+    join_res = test_client.post(
+        "/api/teams/join",
+        headers=h_main,
+        json={"invite_code": t2["invite_code"], "member_role": "Backend"},
+    )
+    assert join_res.status_code == 200
+
+    # 3. INVITE SUCCEEDS in H3 (different hackathon)
+    t3 = test_client.post(
+        "/api/teams",
+        headers=h_other3,
+        json={"hackathon_id": str(h3.id), "name": "Other Squad 3", "member_role": "Team Lead"},
+    ).json()
+    inv3 = test_client.post(
+        f"/api/teams/{t3['id']}/invites",
+        headers=h_other3,
+        json={"email": "s_main@test.dev"},
+    )
+    assert inv3.status_code == 201
+
+    # 4. ACCEPT SUCCEEDS in H4 (different hackathon)
+    t4 = test_client.post(
+        "/api/teams",
+        headers=h_other4,
+        json={"hackathon_id": str(h4.id), "name": "Other Squad 4", "member_role": "Team Lead"},
+    ).json()
+    inv4 = test_client.post(
+        f"/api/teams/{t4['id']}/invites",
+        headers=h_other4,
+        json={"email": "s_main@test.dev"},
+    ).json()
+    acc_res = test_client.post(
+        f"/api/invites/{inv4['id']}/respond?accept=true",
+        headers=h_main,
+    )
+    assert acc_res.status_code == 200
+
+    # Verify S_main now belongs to 3 active teams (H1, H2, H4)
+    all_teams = test_client.get("/api/teams/mine/all", headers=h_main).json()
+    assert len(all_teams) == 3
+    h_ids = {t["hackathon_id"] for t in all_teams}
+    assert str(h1.id) in h_ids
+    assert str(h2.id) in h_ids
+    assert str(h4.id) in h_ids
+
+
+def test_students_search_and_ai_recommendations_exclude_by_hackathon_only(client):
+    test_client, db = client
+    h1 = make_custom_hackathon(db, "Hack AI H1", "hack-ai-h1")
+    h2 = make_custom_hackathon(db, "Hack AI H2", "hack-ai-h2")
+
+    # Seed skill
+    py_skill = db.query(Skill).filter(Skill.name == "Python").first()
+    if not py_skill:
+        py_skill = Skill(name="Python", category="Backend")
+        db.add(py_skill)
+        db.commit()
+
+    lead1 = create_student(db, "ai_lead@test.dev", "AI Leader")
+    h_lead1 = auth_header(test_client, "ai_lead@test.dev", "Student@123")
+
+    # Team in H1 with problem selected
+    t1 = test_client.post(
+        "/api/teams",
+        headers=h_lead1,
+        json={"hackathon_id": str(h1.id), "name": "AI Team 1", "member_role": "Team Lead"},
+    ).json()
+    test_client.post(
+        f"/api/teams/{t1['id']}/problem",
+        headers=h_lead1,
+        json={"problem_id": str(h1.problems[0].id)},
+    )
+
+    # Candidate Same: active in a team in SAME hackathon H1
+    cand_same = create_student(db, "cand_same@test.dev", "Candidate Same")
+    db.add(UserSkill(user_id=cand_same.id, skill_id=py_skill.id, proficiency=Proficiency.advanced))
+    db.commit()
+    h_same = auth_header(test_client, "cand_same@test.dev", "Student@123")
+    test_client.post(
+        "/api/teams",
+        headers=h_same,
+        json={"hackathon_id": str(h1.id), "name": "Same Hack Team", "member_role": "Team Lead"},
+    )
+
+    # Candidate Other: active in a team in OTHER hackathon H2
+    cand_other = create_student(db, "cand_other@test.dev", "Candidate Other")
+    db.add(UserSkill(user_id=cand_other.id, skill_id=py_skill.id, proficiency=Proficiency.advanced))
+    db.commit()
+    h_other = auth_header(test_client, "cand_other@test.dev", "Student@123")
+    test_client.post(
+        "/api/teams",
+        headers=h_other,
+        json={"hackathon_id": str(h2.id), "name": "Other Hack Team", "member_role": "Team Lead"},
+    )
+
+    # Candidate Free: not in any team
+    cand_free = create_student(db, "cand_free@test.dev", "Candidate Free")
+    db.add(UserSkill(user_id=cand_free.id, skill_id=py_skill.id, proficiency=Proficiency.advanced))
+    db.commit()
+
+    # 1. Check /api/students?team_id={t1['id']}
+    students_res = test_client.get(f"/api/students?team_id={t1['id']}", headers=h_lead1)
+    assert students_res.status_code == 200
+    student_ids = [s["id"] for s in students_res.json()]
+    assert str(cand_same.id) not in student_ids, "Candidate on team in same hackathon MUST be excluded"
+    assert str(cand_other.id) in student_ids, "Candidate on team in other hackathon MUST be eligible"
+    assert str(cand_free.id) in student_ids, "Free candidate MUST be eligible"
+
+    # 2. Check /api/ai/teams/{t1['id']}/recommendations
+    recs_res = test_client.get(f"/api/ai/teams/{t1['id']}/recommendations", headers=h_lead1)
+    assert recs_res.status_code == 200
+    rec_ids = [r["id"] for r in recs_res.json()["recommendations"]]
+    assert str(cand_same.id) not in rec_ids, "Candidate on team in same hackathon MUST be excluded from AI recommendations"
+    assert str(cand_other.id) in rec_ids, "Candidate on team in other hackathon MUST be included in AI recommendations"
+    assert str(cand_free.id) in rec_ids, "Free candidate MUST be included in AI recommendations"
+
+
+def test_teams_mine_and_projects_mine_with_and_without_team_id(client):
+    test_client, db = client
+    h1 = make_custom_hackathon(db, "Hack Mine 1", "hack-mine-1")
+    h2 = make_custom_hackathon(db, "Hack Mine 2", "hack-mine-2")
+
+    u_member = create_student(db, "dual_owner@test.dev", "Dual Owner")
+    u_outsider = create_student(db, "outsider@test.dev", "Outsider")
+
+    h_member = auth_header(test_client, "dual_owner@test.dev", "Student@123")
+    h_outsider = auth_header(test_client, "outsider@test.dev", "Student@123")
+
+    # Team 1 created earlier
+    t1 = test_client.post(
+        "/api/teams",
+        headers=h_member,
+        json={"hackathon_id": str(h1.id), "name": "Early Team", "member_role": "Team Lead"},
+    ).json()
+    test_client.post(
+        f"/api/teams/{t1['id']}/problem",
+        headers=h_member,
+        json={"problem_id": str(h1.problems[0].id)},
+    )
+    p1 = test_client.post(
+        f"/api/teams/{t1['id']}/project",
+        headers=h_member,
+        json={"title": "Early Project"},
+    ).json()
+
+    time.sleep(0.05)
+    # Team 2 created later
+    t2 = test_client.post(
+        "/api/teams",
+        headers=h_member,
+        json={"hackathon_id": str(h2.id), "name": "Recent Team", "member_role": "Team Lead"},
+    ).json()
+    test_client.post(
+        f"/api/teams/{t2['id']}/problem",
+        headers=h_member,
+        json={"problem_id": str(h2.problems[0].id)},
+    )
+    p2 = test_client.post(
+        f"/api/teams/{t2['id']}/project",
+        headers=h_member,
+        json={"title": "Recent Project"},
+    ).json()
+
+    # 1. /teams/mine without team_id -> returns Team 2 (most recently joined)
+    mine_team_default = test_client.get("/api/teams/mine", headers=h_member)
+    assert mine_team_default.status_code == 200
+    assert mine_team_default.json()["team"]["id"] == t2["id"]
+
+    # 2. /projects/mine without team_id -> returns Project 2 (project of most recently joined team)
+    mine_proj_default = test_client.get("/api/projects/mine", headers=h_member)
+    assert mine_proj_default.status_code == 200
+    assert mine_proj_default.json()["id"] == p2["id"]
+
+    # 3. /teams/mine with team_id=t1['id'] -> returns Team 1
+    mine_team_t1 = test_client.get(f"/api/teams/mine?team={t1['id']}", headers=h_member)
+    assert mine_team_t1.status_code == 200
+    assert mine_team_t1.json()["team"]["id"] == t1["id"]
+
+    # 4. /projects/mine with team_id=t1['id'] -> returns Project 1
+    mine_proj_t1 = test_client.get(f"/api/projects/mine?team={t1['id']}", headers=h_member)
+    assert mine_proj_t1.status_code == 200
+    assert mine_proj_t1.json()["id"] == p1["id"]
+
+    # 5. Outsider tries accessing with team_id=t1['id'] -> 404 on both
+    out_team = test_client.get(f"/api/teams/mine?team={t1['id']}", headers=h_outsider)
+    assert out_team.status_code == 404
+
+    out_proj = test_client.get(f"/api/projects/mine?team={t1['id']}", headers=h_outsider)
+    assert out_proj.status_code == 404
