@@ -281,8 +281,12 @@ def admin_participants(
 
     result: list[AdminParticipantOut] = []
     for u in users:
-        active_membership = next((m for m in u.memberships if m.status == MemberStatus.active), None)
-        team_name = active_membership.team.name if active_membership and active_membership.team else None
+        active_memberships = sorted(
+            [m for m in u.memberships if m.status == MemberStatus.active and m.team],
+            key=lambda m: (m.joined_at, m.id),
+            reverse=True,
+        )
+        team_name = ", ".join(m.team.name for m in active_memberships) if active_memberships else None
         result.append(
             AdminParticipantOut(
                 id=str(u.id),

@@ -109,11 +109,16 @@ def get_teammate_recommendations(
     # Candidate pool query:
     # 1. Active student users
     # 2. Exclude anyone who is or was a member of this team (in any status)
-    # 3. Exclude anyone who is an active member of any other team
+    # 3. Exclude anyone who is an active member of any other team in this hackathon
     past_or_present_members = select(TeamMember.user_id).where(TeamMember.team_id == team.id)
-    other_active_members = select(TeamMember.user_id).where(
-        TeamMember.status == MemberStatus.active,
-        TeamMember.team_id != team.id,
+    other_active_members = (
+        select(TeamMember.user_id)
+        .join(Team, TeamMember.team_id == Team.id)
+        .where(
+            TeamMember.status == MemberStatus.active,
+            Team.hackathon_id == team.hackathon_id,
+            TeamMember.team_id != team.id,
+        )
     )
 
     candidate_stmt = (

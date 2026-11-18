@@ -20,16 +20,20 @@ class ActiveHackathonPanel(BaseModel):
     hackathon_name: str
     status: str
     deadline: str
+    team_id: str | None = None
     team_name: str | None
     problem_title: str | None
     member_count: int
     progress: int
+    team_link: str = "/app/team"
+    workspace_link: str = "/app/workspace"
 
 
 class StudentDashboard(BaseModel):
     greeting_name: str
     profile_completion: int
     active: ActiveHackathonPanel | None
+    active_teams: list[ActiveHackathonPanel] = []
     insights: list[Insight]
     next_action: NextAction
 

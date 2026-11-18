@@ -35,22 +35,43 @@ def student_dashboard(db: Session, user: User) -> StudentDashboard:
     assert user is not None
     completion, missing = profile_completion(user)
 
-    membership = next((m for m in user.memberships if m.status == MemberStatus.active), None)
-    active = None
-    problem_title = None
-    if membership:
-        team = membership.team
-        problem_title = team.problem_selection.problem.title if team.problem_selection else None
-        active = ActiveHackathonPanel(
-            hackathon_id=str(team.hackathon_id),
-            hackathon_name=team.hackathon.name,
-            status=team.hackathon.status.value,
-            deadline=str(team.hackathon.end_date),
-            team_name=team.name,
-            problem_title=problem_title,
-            member_count=len([m for m in team.members if m.status == MemberStatus.active]),
-            progress= _progress(completion, bool(team.problem_selection), len(team.members)),
+    active_memberships = sorted(
+        [m for m in user.memberships if m.status == MemberStatus.active and m.team],
+        key=lambda m: (m.joined_at, m.id),
+        reverse=True,
+    )
+    has_multiple_teams = len(active_memberships) > 1
+    membership = active_memberships[0] if active_memberships else None
+
+    active_teams: list[ActiveHackathonPanel] = []
+    for m in active_memberships:
+        team = m.team
+        p_title = (
+            team.problem_selection.problem.title
+            if team.problem_selection and team.problem_selection.problem
+            else None
         )
+        active_cnt = len([x for x in team.members if x.status == MemberStatus.active])
+        t_link = f"/app/team?team={team.id}" if has_multiple_teams else "/app/team"
+        w_link = f"/app/workspace?team={team.id}" if has_multiple_teams else "/app/workspace"
+        active_teams.append(
+            ActiveHackathonPanel(
+                hackathon_id=str(team.hackathon_id),
+                hackathon_name=team.hackathon.name if team.hackathon else "",
+                status=team.hackathon.status.value if team.hackathon else "active",
+                deadline=str(team.hackathon.end_date) if team.hackathon else "",
+                team_id=str(team.id),
+                team_name=team.name,
+                problem_title=p_title,
+                member_count=active_cnt,
+                progress=_progress(completion, bool(team.problem_selection), active_cnt),
+                team_link=t_link,
+                workspace_link=w_link,
+            )
+        )
+
+    active = active_teams[0] if active_teams else None
+    problem_title = active.problem_title if active else None
 
     insights = [
         Insight(
@@ -74,16 +95,17 @@ def student_dashboard(db: Session, user: User) -> StudentDashboard:
         Insight(
             key="compatibility",
             label="Team compatibility",
-            status="upcoming",
-            detail="AI teammate matching arrives in Part 2",
+            status="ready" if (membership and membership.team.problem_selection) else "upcoming",
+            detail="AI teammate suggestions and compatibility analysis are available",
         ),
     ]
 
-    next_action = _next_action(completion, membership, problem_title)
+    next_action = _next_action(completion, membership, problem_title, has_multiple_teams=has_multiple_teams)
     return StudentDashboard(
         greeting_name=user.full_name.split()[0],
         profile_completion=completion,
         active=active,
+        active_teams=active_teams,
         insights=insights,
         next_action=next_action,
     )
@@ -96,7 +118,12 @@ def _progress(profile: int, has_problem: bool, members: int) -> int:
     return min(int(score), 100)
 
 
-def _next_action(completion: int, membership: TeamMember | None, problem_title: str | None) -> NextAction:
+def _next_action(
+    completion: int,
+    membership: TeamMember | None,
+    problem_title: str | None,
+    has_multiple_teams: bool = False,
+) -> NextAction:
     if completion < 70:
         return NextAction(
             title="Complete your builder profile",
@@ -118,11 +145,12 @@ def _next_action(completion: int, membership: TeamMember | None, problem_title: 
             cta="View hackathon",
             href=f"/app/hackathons/{membership.team.hackathon_id}",
         )
+    team_suffix = f"?team={membership.team_id}" if has_multiple_teams else ""
     return NextAction(
         title="Grow a complementary team",
-        description="Invite teammates or share your invite code. AI compatibility scoring ships in Part 2 of HackNova.",
+        description="Invite teammates or share your invite code. Smart teammate suggestions are active for your squad.",
         cta="Open team workspace",
-        href="/app/team",
+        href=f"/app/team{team_suffix}",
     )
 
 
