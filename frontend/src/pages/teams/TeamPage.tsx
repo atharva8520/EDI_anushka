@@ -404,6 +404,21 @@ export function TeamPage() {
     ? new Date(selectedHackathon.registration_deadline) < new Date(new Date().toDateString())
     : false;
 
+  const joinedHackathonIds = new Set(allTeams.map((t) => t.hackathon_id));
+  const isHackathonAlreadyJoined = joinedHackathonIds.has(createHackathonId);
+
+  useEffect(() => {
+    if (hackathons.length > 0) {
+      const joinedSet = new Set(allTeams.map((t) => t.hackathon_id));
+      if (!createHackathonId || joinedSet.has(createHackathonId)) {
+        const available = hackathons.find((h) => !joinedSet.has(h.id));
+        if (available) {
+          setCreateHackathonId(available.id);
+        }
+      }
+    }
+  }, [hackathons, allTeams, createHackathonId]);
+
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-8 space-y-6">
@@ -459,12 +474,24 @@ export function TeamPage() {
                 value={createHackathonId}
                 onChange={(e) => setCreateHackathonId(e.target.value)}
               >
-                {hackathons.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name} ({h.status})
-                  </option>
-                ))}
+                {hackathons.map((h) => {
+                  const isJoined = joinedHackathonIds.has(h.id);
+                  return (
+                    <option key={h.id} value={h.id} disabled={isJoined}>
+                      {h.name} {isJoined ? "(Already joined)" : `(${h.status})`}
+                    </option>
+                  );
+                })}
               </Select>
+
+              {isHackathonAlreadyJoined ? (
+                <div className="flex items-start gap-2 rounded-[12px] border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-900">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                  <div>
+                    You already belong to a squad in this hackathon. You cannot create another team for it.
+                  </div>
+                </div>
+              ) : null}
 
               {isRegistrationClosed ? (
                 <div className="flex items-start gap-2 rounded-[12px] border border-amber-200 bg-amber-50 p-3 text-xs font-medium text-amber-900">
@@ -480,14 +507,14 @@ export function TeamPage() {
                 placeholder="e.g. Neural Forge"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                disabled={isRegistrationClosed}
+                disabled={isRegistrationClosed || isHackathonAlreadyJoined}
               />
 
               <Select
                 label="Your Role"
                 value={createRole}
                 onChange={(e) => setCreateRole(e.target.value)}
-                disabled={isRegistrationClosed}
+                disabled={isRegistrationClosed || isHackathonAlreadyJoined}
               >
                 <option value="Team Lead">Team Lead</option>
                 {PREFERRED_ROLES.map((r) => (
@@ -500,7 +527,7 @@ export function TeamPage() {
               <Button
                 variant="primary"
                 type="submit"
-                disabled={createSubmitting || isRegistrationClosed || !createHackathonId}
+                disabled={createSubmitting || isRegistrationClosed || !createHackathonId || isHackathonAlreadyJoined}
                 className="w-full justify-center gap-2 mt-2"
               >
                 <Sparkles className="h-4 w-4" />

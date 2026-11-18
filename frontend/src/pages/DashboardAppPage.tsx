@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Calendar,
   ShieldCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
@@ -41,6 +42,28 @@ export function DashboardAppPage() {
   const displayName = dashboardData?.greeting_name || profile?.full_name || "Builder";
   const displayEmail = profile?.email || "";
   const displayRole = role || profile?.role || "student";
+
+  // Check for overlapping hackathon dates across active squads
+  const overlappingPairs: { h1: string; h2: string }[] = [];
+  if (dashboardData?.active_teams && dashboardData.active_teams.length > 1) {
+    const teams = dashboardData.active_teams;
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        const t1 = teams[i];
+        const t2 = teams[j];
+        if (t1.hackathon_id === t2.hackathon_id) continue;
+        const s1 = t1.start_date;
+        const e1 = t1.end_date || t1.deadline;
+        const s2 = t2.start_date;
+        const e2 = t2.end_date || t2.deadline;
+        if (s1 && e1 && s2 && e2) {
+          if (s1 <= e2 && s2 <= e1) {
+            overlappingPairs.push({ h1: t1.hackathon_name, h2: t2.hackathon_name });
+          }
+        }
+      }
+    }
+  }
 
   return (
     <div className="flex-1 bg-canvas text-ink">
@@ -85,9 +108,28 @@ export function DashboardAppPage() {
           <Skeleton className="mt-8 h-40 w-full rounded-card" />
         ) : dashboardData?.active_teams && dashboardData.active_teams.length > 1 ? (
           <div className="mt-8 space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
-              Your Active Squads ({dashboardData.active_teams.length})
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-primary">
+                Your Active Squads ({dashboardData.active_teams.length})
+              </h2>
+            </div>
+
+            {overlappingPairs.length > 0 ? (
+              <div className="flex items-start gap-2.5 rounded-[12px] border border-amber-200 bg-amber-50 p-4 text-xs font-medium text-amber-900">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+                <div>
+                  <span className="font-bold">Schedule Notice:</span> You are participating in hackathons with overlapping dates (
+                  {overlappingPairs.map((p, idx) => (
+                    <span key={idx}>
+                      {idx > 0 ? ", " : ""}
+                      <span className="font-semibold">{p.h1}</span> &amp; <span className="font-semibold">{p.h2}</span>
+                    </span>
+                  ))}
+                  ). Multi-event participation is permitted—ensure you balance deliverables across your squads.
+                </div>
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-1 gap-4">
               {dashboardData.active_teams.map((t) => (
                 <Card
