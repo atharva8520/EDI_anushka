@@ -79,7 +79,7 @@ export function ProjectsShowcasePage() {
         {filteredProjects.map((proj) => (
           <Card
             key={proj.id}
-            className="overflow-hidden hover:shadow-lift transition duration-200 border border-line hover:border-primary/40 bg-white flex flex-col justify-between"
+            className="overflow-hidden hover:shadow-lift transition duration-200 border border-line hover:border-cyan/40 bg-surface-card/90 hover:shadow-glow flex flex-col justify-between"
           >
             <div>
               <div className="relative h-48 w-full overflow-hidden bg-slate-900">

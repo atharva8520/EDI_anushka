@@ -60,7 +60,7 @@ export function LandingPage() {
       </div>
 
       {/* Global Header */}
-      <header className="sticky top-0 z-40 border-b border-line/80 bg-white/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-8">
             <Link to="/">
@@ -153,22 +153,22 @@ export function LandingPage() {
 
           {/* Live Platform Stats Counter Bar */}
           <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            <Card className="p-5 text-center bg-white/80 backdrop-blur-sm border-line shadow-card hover:shadow-lift transition">
+            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
               <div className="text-3xl font-black text-ink tracking-tight">12+</div>
               <div className="text-xs font-semibold text-mute mt-1">Active Hackathons</div>
             </Card>
 
-            <Card className="p-5 text-center bg-white/80 backdrop-blur-sm border-line shadow-card hover:shadow-lift transition">
+            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
               <div className="text-3xl font-black text-primary tracking-tight">4,200+</div>
               <div className="text-xs font-semibold text-mute mt-1">Registered Innovators</div>
             </Card>
 
-            <Card className="p-5 text-center bg-white/80 backdrop-blur-sm border-line shadow-card hover:shadow-lift transition">
+            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
               <div className="text-3xl font-black text-emerald-600 tracking-tight">85+</div>
               <div className="text-xs font-semibold text-mute mt-1">Verified Organizations</div>
             </Card>
 
-            <Card className="p-5 text-center bg-white/80 backdrop-blur-sm border-line shadow-card hover:shadow-lift transition">
+            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
               <div className="text-3xl font-black text-accent-blue tracking-tight">$350,000+</div>
               <div className="text-xs font-semibold text-mute mt-1">Prizes &amp; Grants</div>
             </Card>
@@ -508,7 +508,7 @@ export function LandingPage() {
             <Link
               key={c.id}
               to="/companies"
-              className="p-4 rounded-xl border border-line bg-white hover:border-primary/40 hover:shadow-card transition flex flex-col items-center text-center gap-2"
+              className="p-4 rounded-xl border border-line bg-surface-card hover:border-cyan/40 hover:shadow-glow hover:shadow-card transition flex flex-col items-center text-center gap-2"
             >
               <img src={c.logo} alt={c.name} className="h-8 w-8 rounded-lg object-cover" />
               <span className="text-[11px] font-bold text-ink line-clamp-1">{c.name.split(" ")[0]}</span>
@@ -518,7 +518,7 @@ export function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-line bg-white px-6 py-12 text-xs text-mute">
+      <footer className="border-t border-line bg-surface px-6 py-12 text-xs text-mute">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
             <Logo />

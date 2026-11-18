@@ -142,7 +142,7 @@ export function HackathonListPage() {
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="mb-6 rounded-card border border-line bg-white p-4 shadow-card">
+        <div className="mb-6 rounded-card border border-line bg-surface-card/90 p-4 shadow-card">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             {/* Search Box */}
             <div className="relative flex-1">
@@ -152,7 +152,7 @@ export function HackathonListPage() {
                 placeholder="Search by event name, company / organizer, domain, or city..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-[12px] border border-line bg-canvas pl-10 pr-4 py-2 text-sm outline-none transition focus:border-primary focus:bg-white"
+                className="w-full rounded-[12px] border border-line bg-canvas pl-10 pr-4 py-2 text-sm outline-none transition focus:border-cyan focus:bg-surface-elevated text-slate-100"
               />
             </div>
 
@@ -248,7 +248,7 @@ export function HackathonListPage() {
         {loading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-card border border-line bg-white p-6 shadow-card space-y-4">
+              <div key={i} className="rounded-card border border-line bg-surface-card/90 p-6 shadow-card space-y-4">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-7 w-3/4" />
                 <Skeleton className="h-12 w-full" />

@@ -140,7 +140,7 @@ export function CompaniesPage() {
         {filteredCompanies.map((comp) => (
           <Card
             key={comp.id}
-            className="p-6 flex flex-col justify-between hover:shadow-lift transition duration-200 border border-line hover:border-primary/40 bg-white"
+            className="p-6 flex flex-col justify-between hover:shadow-lift transition duration-200 border border-line hover:border-cyan/40 bg-surface-card/90 hover:shadow-glow"
           >
             <div className="space-y-4">
               {/* Header */}

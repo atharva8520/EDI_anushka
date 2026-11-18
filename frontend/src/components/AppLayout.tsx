@@ -88,7 +88,7 @@ export function AppLayout() {
           </Link>
           <button
             onClick={() => setMobileOpen(false)}
-            className="md:hidden rounded-btn p-1 text-mute hover:bg-canvas"
+            className="md:hidden rounded-btn p-1 text-mute hover:bg-slate-800 transition"
             aria-label="Close navigation menu"
           >
             <X className="h-5 w-5" />
@@ -104,16 +104,16 @@ export function AppLayout() {
                 key={item.href}
                 to={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-btn px-3.5 py-2.5 text-sm transition ${
+                className={`flex items-center gap-3 rounded-btn px-3.5 py-2.5 text-sm transition-all duration-200 ${
                   active
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-mute hover:bg-canvas hover:text-ink font-medium"
+                    ? "bg-gradient-to-r from-primary/20 via-primary/10 to-transparent text-cyan font-semibold border-l-2 border-cyan shadow-[0_0_15px_rgba(0,242,254,0.12)]"
+                    : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-100 font-medium"
                 }`}
               >
-                <Icon className={`h-4 w-4 ${active ? "text-primary" : "text-mute"}`} />
+                <Icon className={`h-4 w-4 ${active ? "text-cyan" : "text-slate-400"}`} />
                 <span className="flex-1">{item.label}</span>
                 {item.href === "/app/invites" && inviteCount > 0 ? (
-                  <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white">
+                  <span className="grid h-5 min-w-[20px] place-items-center rounded-full bg-primary px-1.5 text-[11px] font-bold text-white shadow-glow">
                     {inviteCount}
                   </span>
                 ) : null}
@@ -123,9 +123,9 @@ export function AppLayout() {
         </nav>
       </div>
 
-      <div className="p-4 border-t border-line bg-white/50">
+      <div className="p-4 border-t border-line bg-surface-card/60 backdrop-blur-md">
         <div className="flex items-center gap-3 mb-3">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary/10 text-primary font-bold text-sm">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-tr from-primary to-cyan text-white font-bold text-sm shadow-[0_0_12px_rgba(99,102,241,0.4)]">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
@@ -152,13 +152,13 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-canvas text-ink flex flex-col md:flex-row">
       {/* Mobile Top Bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-white px-4 py-3 md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-surface/95 backdrop-blur-md px-4 py-3 md:hidden">
         <Link to="/app">
           <Logo />
         </Link>
         <button
           onClick={() => setMobileOpen(true)}
-          className="rounded-btn border border-line p-2 text-ink hover:bg-canvas"
+          className="rounded-btn border border-line p-2 text-ink hover:bg-slate-800 transition"
           aria-label="Open navigation menu"
         >
           <Menu className="h-5 w-5" />
@@ -169,24 +169,24 @@ export function AppLayout() {
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="fixed inset-0 bg-[#111827]/40 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/75 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white shadow-lift z-10 flex flex-col">
+          <div className="fixed inset-y-0 left-0 w-72 bg-surface border-r border-line shadow-2xl z-50">
             {navContent}
           </div>
         </div>
       ) : null}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r md:border-line md:bg-white md:sticky md:top-0 md:h-screen">
+      <aside className="hidden md:flex md:w-64 md:flex-col border-r border-line bg-surface/90 backdrop-blur-xl shrink-0">
         {navContent}
       </aside>
 
-      {/* Main Content Viewport */}
-      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+      {/* Main Content Pane */}
+      <main className="flex-1 flex flex-col min-w-0 bg-canvas overflow-y-auto">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }

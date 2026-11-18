@@ -54,6 +54,7 @@ export function HostHackathonPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdSuccess, setCreatedSuccess] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
 
   const totalWeight = criteria.reduce((sum, c) => sum + (Number(c.weight) || 0), 0);
 
@@ -96,8 +97,9 @@ export function HostHackathonPage() {
     };
 
     try {
-      if (role === "admin") {
-        await api.post("/hackathons", payload);
+      const res = await api.post("/hackathons/host", payload);
+      if (res.data?.id) {
+        setCreatedId(res.data.id);
       }
       setCreatedSuccess(true);
     } catch (err) {
@@ -147,27 +149,39 @@ export function HostHackathonPage() {
 
       {/* Success View */}
       {createdSuccess ? (
-        <Card className="p-8 text-center space-y-5 bg-white border-emerald-300 shadow-lift">
-          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-100 text-emerald-600">
+        <Card className="p-8 text-center space-y-6 bg-surface-card border-emerald-500/30 shadow-glow">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.3)]">
             <Check className="h-8 w-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-black text-ink">Hackathon Created Successfully!</h2>
+            <h2 className="text-2xl font-black text-ink">Hackathon Created & Published!</h2>
             <p className="text-xs text-mute max-w-md mx-auto">
-              Your challenge <strong className="text-ink">{name}</strong> is ready. Students can now discover your
-              event, form balanced squads, and submit solutions.
+              Your challenge <strong className="text-cyan">{name}</strong> is live and persisted in the database.
+              Students, organizers, and sponsors can now discover your event in the directory, explore the problem tracks, and form squads.
             </p>
           </div>
-          <div className="flex justify-center gap-3 pt-4">
+          <div className="flex flex-wrap justify-center gap-3 pt-3">
             <Link to="/app/hackathons">
-              <Button variant="primary" className="text-xs py-2 px-6">
+              <Button variant="primary" className="text-xs py-2.5 px-6">
                 Explore in Hackathon Directory <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            {createdId && (
+              <Link to={`/app/hackathons/${createdId}`}>
+                <Button variant="secondary" className="text-xs py-2.5 px-5">
+                  View Event Page
+                </Button>
+              </Link>
+            )}
+            <Link to="/app">
+              <Button variant="ghost" className="text-xs py-2.5 px-5">
+                Go to Dashboard
               </Button>
             </Link>
           </div>
         </Card>
       ) : (
-        <Card className="p-6 md:p-8 space-y-6 bg-white shadow-card">
+        <Card className="p-6 md:p-8 space-y-6 bg-surface-card shadow-card border border-line">
           {error && (
             <div className="flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-medium text-rose-800">
               <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
