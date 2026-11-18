@@ -60,6 +60,8 @@ def student_dashboard(db: Session, user: User) -> StudentDashboard:
                 hackathon_name=team.hackathon.name if team.hackathon else "",
                 status=team.hackathon.status.value if team.hackathon else "active",
                 deadline=str(team.hackathon.end_date) if team.hackathon else "",
+                start_date=str(team.hackathon.start_date) if team.hackathon and team.hackathon.start_date else None,
+                end_date=str(team.hackathon.end_date) if team.hackathon and team.hackathon.end_date else None,
                 team_id=str(team.id),
                 team_name=team.name,
                 problem_title=p_title,

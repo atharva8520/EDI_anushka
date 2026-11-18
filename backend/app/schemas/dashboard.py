@@ -20,6 +20,8 @@ class ActiveHackathonPanel(BaseModel):
     hackathon_name: str
     status: str
     deadline: str
+    start_date: str | None = None
+    end_date: str | None = None
     team_id: str | None = None
     team_name: str | None
     problem_title: str | None
