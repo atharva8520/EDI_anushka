@@ -431,3 +431,57 @@ def test_pagination_no_duplicates_with_multiple_domains(client):
     assert res_p2.headers["X-Total-Count"] == "2"
     assert res_p1.json()[0]["id"] != res_p2.json()[0]["id"]
 
+
+
+def test_host_hackathon_endpoint_persists_and_appears_in_listing(client):
+    test_client, db = client
+    create_student(db, "host_org@test.dev", "Organizer Host")
+    headers = auth_header(test_client, "host_org@test.dev", "Student@123")
+
+    today = date.today()
+    payload = {
+        "name": "Global GreenTech Innovation Challenge",
+        "short_description": "Building sustainable AI systems for planetary resilience.",
+        "description": "A premier worldwide hackathon focused on green computing, carbon tracking, and regenerative AI.",
+        "banner_url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+        "organizer": "GreenByte Global",
+        "start_date": str(today + timedelta(days=7)),
+        "end_date": str(today + timedelta(days=10)),
+        "registration_deadline": str(today + timedelta(days=5)),
+        "location": "Online / Global",
+        "team_size_min": 2,
+        "team_size_max": 4,
+        "rules": "All submissions must be original open-source software.",
+        "domains": ["GreenTech", "AI/ML"],
+        "criteria": [
+            {"title": "Technical Depth", "description": "Architecture and performance", "weight": 40},
+            {"title": "Sustainability Impact", "description": "Measurable green metrics", "weight": 60},
+        ],
+    }
+
+    # 1. Anonymous request is rejected with 401
+    res_anon = test_client.post("/api/hackathons/host", json=payload)
+    assert res_anon.status_code == 401
+
+    # 2. Authenticated organizer / student succeeds with 201
+    res = test_client.post("/api/hackathons/host", headers=headers, json=payload)
+    assert res.status_code == 201, f"Expected 201, got {res.status_code}: {res.text}"
+    created = res.json()
+    assert created["name"] == payload["name"]
+    assert created["status"] == "published"
+    assert created["organizer"] == "GreenByte Global"
+    assert created["problem_count"] >= 1
+    # Problem count is incremented
+    assert created["problem_count"] == 1
+
+    # 3. New hackathon is immediately visible in public hackathon listings
+    res_list = test_client.get("/api/hackathons")
+    assert res_list.status_code == 200
+    listed_ids = [h["id"] for h in res_list.json()]
+    assert created["id"] in listed_ids
+
+    # 4. Search by organizer finds the newly created hackathon
+    res_search = test_client.get("/api/hackathons?q=GreenByte")
+    assert res_search.status_code == 200
+    search_ids = [h["id"] for h in res_search.json()]
+    assert created["id"] in search_ids

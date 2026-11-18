@@ -6,7 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.core.deps import bearer, require_admin
+from app.core.deps import bearer, get_current_user, require_admin
 from app.core.security import decode_token
 from app.database.session import get_db
 from app.models.hackathon import Hackathon, HackathonDomain, HackathonProblem, HackathonStatus, JudgingCriterion
@@ -307,6 +307,65 @@ def get_hackathon(hackathon_id: UUID, db: Session = Depends(get_db), user: User 
     if not is_admin and item.status in {HackathonStatus.draft, HackathonStatus.archived}:
         raise HTTPException(status_code=404, detail="Hackathon not found")
     return serialize_hackathon(item)
+
+
+@router.post("/hackathons/host", response_model=HackathonOut, status_code=201)
+def host_hackathon(
+    payload: HackathonCreate,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    cleaned_domains, cleaned_criteria = validate_hackathon_fields(
+        team_size_min=payload.team_size_min,
+        team_size_max=payload.team_size_max,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        registration_deadline=payload.registration_deadline,
+        domains=payload.domains,
+        criteria=payload.criteria,
+    )
+
+    primary_domain = cleaned_domains[0] if cleaned_domains else "Open Innovation"
+
+    initial_problem = HackathonProblem(
+        code="CHAL-01",
+        title=f"{payload.name} Challenge Track",
+        statement=f"Develop an innovative prototype for {payload.name} addressing critical challenges in {primary_domain}.",
+        description=payload.description or "Open challenge track for teams participating in this hackathon.",
+        domain=primary_domain,
+        target_users="Global developers, students, and industry evaluators",
+        constraints="Projects must be built during the hackathon period and adhere to open-source repository guidelines.",
+        expected_outcome="Functional application repository, system architecture diagrams, and working live demonstration.",
+        evaluation_criteria="Technical implementation, domain impact, UX design, and presentation clarity.",
+        is_published=True,
+    )
+
+    hackathon = Hackathon(
+        name=payload.name,
+        slug=unique_slug(db, payload.name),
+        description=payload.description,
+        short_description=payload.short_description,
+        banner_url=payload.banner_url,
+        organizer=payload.organizer,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        registration_deadline=payload.registration_deadline,
+        location=payload.location,
+        team_size_min=payload.team_size_min,
+        team_size_max=payload.team_size_max,
+        rules=payload.rules,
+        status=HackathonStatus.published,
+        created_by=user.id,
+        domains=[HackathonDomain(domain=d) for d in (cleaned_domains or [])],
+        criteria=[
+            JudgingCriterion(title=c.title, description=c.description, weight=c.weight)
+            for c in (cleaned_criteria or [])
+        ],
+        problems=[initial_problem],
+    )
+    db.add(hackathon)
+    db.commit()
+    return serialize_hackathon(_get_hackathon(db, hackathon.id))
 
 
 @router.post("/hackathons", response_model=HackathonOut, status_code=201)
