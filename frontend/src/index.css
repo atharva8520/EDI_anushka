@@ -36,15 +36,19 @@ body {
 
 /* Gradient Presets */
 .hn-gradient {
-  background-image: linear-gradient(135deg, #6366F1 0%, #00F2FE 100%);
+  background-image: linear-gradient(135deg, #A855F7 0%, #7C3AED 50%, #4F46E5 100%);
 }
 
 .hn-gradient-2 {
-  background-image: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
+  background-image: linear-gradient(135deg, #EC4899 0%, #A855F7 50%, #6366F1 100%);
 }
 
 .hn-gradient-fire {
-  background-image: linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #00F2FE 100%);
+  background-image: linear-gradient(135deg, #F43F5E 0%, #A855F7 50%, #00F2FE 100%);
+}
+
+.glow-purple {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.45);
 }
 
 .glow-cyan {
@@ -52,7 +56,7 @@ body {
 }
 
 .glow-violet {
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.45);
 }
 
 .glow-card {

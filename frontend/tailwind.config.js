@@ -17,19 +17,25 @@ export default {
         line: "#1E293B",
         "line-accent": "rgba(0, 242, 254, 0.2)",
         primary: {
-          DEFAULT: "#6366F1",
-          dark: "#4F46E5",
-          neon: "#818CF8",
+          DEFAULT: "#8B5CF6",
+          dark: "#7C3AED",
+          neon: "#A855F7",
+          light: "#C084FC",
         },
         cyan: {
           DEFAULT: "#06B6D4",
           neon: "#00F2FE",
+        },
+        magenta: {
+          DEFAULT: "#D946EF",
+          neon: "#F43F5E",
         },
         accent: {
           blue: "#00F2FE",
           violet: "#8B5CF6",
           emerald: "#10B981",
           amber: "#F59E0B",
+          pink: "#EC4899",
         },
       },
       fontFamily: {
@@ -38,9 +44,10 @@ export default {
       boxShadow: {
         card: "0 8px 30px rgba(0, 0, 0, 0.35)",
         lift: "0 16px 40px rgba(0, 0, 0, 0.50)",
-        glow: "0 0 25px rgba(99, 102, 241, 0.35)",
+        glow: "0 0 25px rgba(139, 92, 246, 0.40)",
         "glow-cyan": "0 0 25px rgba(0, 242, 254, 0.35)",
-        "glow-violet": "0 0 25px rgba(139, 92, 246, 0.35)",
+        "glow-violet": "0 0 30px rgba(168, 85, 247, 0.45)",
+        "glow-pink": "0 0 30px rgba(236, 72, 153, 0.35)",
       },
       borderRadius: {
         card: "20px",

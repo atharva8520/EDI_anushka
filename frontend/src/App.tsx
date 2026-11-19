@@ -9,6 +9,7 @@ import { NotFoundPage } from "./pages/NotFoundPage";
 import { HackathonListPage } from "./pages/hackathons/HackathonListPage";
 import { HackathonDetailPage } from "./pages/hackathons/HackathonDetailPage";
 import { ProblemDetailPage } from "./pages/hackathons/ProblemDetailPage";
+import { PublicLayout } from "./components/PublicLayout";
 import { AppLayout } from "./components/AppLayout";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminLayout } from "./pages/admin/AdminLayout";
@@ -64,11 +65,16 @@ function PublicAuthRoute({ children }: { children: ReactNode }) {
 export function App() {
   return (
     <Routes>
-      {/* Public Landing & Discoveries */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/companies" element={<CompaniesPage />} />
-      <Route path="/projects" element={<ProjectsShowcasePage />} />
-      <Route path="/host" element={<HostHackathonPage />} />
+      {/* Public Landing & Discoveries (Directly accessible to all visitors with shared nav) */}
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/hackathons" element={<HackathonListPage />} />
+        <Route path="/hackathons/:id" element={<HackathonDetailPage />} />
+        <Route path="/hackathons/:id/problems/:problemId" element={<ProblemDetailPage />} />
+        <Route path="/companies" element={<CompaniesPage />} />
+        <Route path="/projects" element={<ProjectsShowcasePage />} />
+        <Route path="/host" element={<HostHackathonPage />} />
+      </Route>
 
       {/* Auth Routes (Outside authenticated shell) */}
       <Route

@@ -601,3 +601,58 @@ export interface CopilotChatOut {
   model: string;
 }
 
+export interface ProjectSubmission {
+  id: string;
+  team_id: string;
+  team_name: string;
+  title: string;
+  summary: string | null;
+  repo_url: string | null;
+  demo_url: string | null;
+  video_url: string | null;
+  pitch_deck_url: string | null;
+  tech_stack: string[];
+  is_submitted: boolean;
+  submitted_at: string | null;
+  submitted_by: string | null;
+  submitted_by_name: string | null;
+  submission_notes: string | null;
+}
+
+export interface CriterionScoreOut {
+  criterion_id: string;
+  criterion_title: string;
+  criterion_weight: number;
+  score: number;
+  notes?: string | null;
+}
+
+export interface EvaluationOut {
+  id: string;
+  project_id: string;
+  hackathon_id: string;
+  judge_id: string;
+  judge_name: string;
+  total_score: number;
+  feedback?: string | null;
+  scores: CriterionScoreOut[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LeaderboardItem {
+  rank: number;
+  project_id: string;
+  project_title: string;
+  team_id: string;
+  team_name: string;
+  problem_title?: string | null;
+  problem_domain?: string | null;
+  repo_url?: string | null;
+  demo_url?: string | null;
+  tech_stack: string[];
+  average_score: number;
+  evaluation_count: number;
+  badge?: string | null;
+}
+

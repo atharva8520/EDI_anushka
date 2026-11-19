@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Edit2,
   FileCode,
+  Trophy,
 } from "lucide-react";
 import { api, apiError } from "../../api/client";
 import type { HackathonDetail, ProblemSummary, MyTeamItem } from "../../types";
@@ -21,6 +22,7 @@ import { Button } from "../../components/Button";
 import { Badge, statusTone } from "../../components/Badge";
 import { Card, Skeleton, ErrorState } from "../../components/States";
 import { useAuth } from "../../context/AuthContext";
+import { LeaderboardTab } from "./LeaderboardTab";
 
 export function HackathonDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +31,7 @@ export function HackathonDetailPage() {
   const [hackathon, setHackathon] = useState<HackathonDetail | null>(null);
   const [problems, setProblems] = useState<ProblemSummary[]>([]);
   const [myTeamInHackathon, setMyTeamInHackathon] = useState<MyTeamItem | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "leaderboard">("overview");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -257,21 +260,48 @@ export function HackathonDetailPage() {
           </div>
         </div>
 
-        {/* Grid: Problems List (Left) and Judging/Rules (Right) */}
-        <div className="mt-8 grid gap-8 lg:grid-cols-3">
-          {/* Problems (2 Cols) */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-ink">Problem Statements</h2>
-                <p className="text-xs text-mute">
-                  Review the challenges released by organizers and select one for your squad.
-                </p>
+        {/* Tab Navigation */}
+        <div className="mt-8 flex border-b border-line">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-xs font-bold transition ${
+              activeTab === "overview"
+                ? "border-primary text-primary"
+                : "border-transparent text-mute hover:text-ink"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            Overview & Problem Statements
+          </button>
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-xs font-bold transition ${
+              activeTab === "leaderboard"
+                ? "border-primary text-primary"
+                : "border-transparent text-mute hover:text-ink"
+            }`}
+          >
+            <Trophy className="h-4 w-4 text-amber-500" />
+            Leaderboard & Rankings
+          </button>
+        </div>
+
+        {/* Tab 1: Overview & Problems */}
+        {activeTab === "overview" && (
+          <div className="mt-8 grid gap-8 lg:grid-cols-3">
+            {/* Problems (2 Cols) */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold tracking-tight text-ink">Problem Statements</h2>
+                  <p className="text-xs text-mute">
+                    Review the challenges released by organizers and select one for your squad.
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-primary">
+                  {problems.length} {problems.length === 1 ? "Problem" : "Problems"}
+                </span>
               </div>
-              <span className="text-xs font-semibold text-primary">
-                {problems.length} {problems.length === 1 ? "Problem" : "Problems"}
-              </span>
-            </div>
 
             {problems.length === 0 ? (
               <Card className="p-8 text-center">
@@ -378,6 +408,14 @@ export function HackathonDetailPage() {
             </Card>
           </div>
         </div>
+      )}
+
+      {/* Tab 2: Leaderboard & Rankings */}
+      {activeTab === "leaderboard" && (
+        <div className="mt-8">
+          <LeaderboardTab hackathon={hackathon} isAdmin={role === "admin"} />
+        </div>
+      )}
       </main>
     </div>
   );

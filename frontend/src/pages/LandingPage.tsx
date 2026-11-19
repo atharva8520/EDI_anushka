@@ -6,24 +6,25 @@ import {
   Compass,
   Users,
   Trophy,
-  Building2,
-  ShieldCheck,
-  CheckCircle2,
-  Layers,
-  Cpu,
   Zap,
+  Award,
+  Kanban,
+  Bot,
+  Flame,
+  Calendar,
+  Building2,
 } from "lucide-react";
-import { Logo } from "../components/Logo";
-import { Button } from "../components/Button";
+import { Badge } from "../components/Badge";
 import { Card } from "../components/States";
-import { useAuth } from "../context/AuthContext";
-import { VERIFIED_COMPANIES } from "../data/companies";
+import { api } from "../api/client";
+import type { HackathonListItem } from "../types";
 
 export function LandingPage() {
-  const { token } = useAuth();
-
   // Active persona tab on landing
-  const [activePersona, setActivePersona] = useState<"students" | "companies" | "admins">("students");
+  const [activePersona, setActivePersona] = useState<"builders" | "companies" | "judges">("builders");
+
+  // Live hackathons fetched from backend
+  const [liveHackathons, setLiveHackathons] = useState<HackathonListItem[]>([]);
 
   // Live countdown timer for featured hackathon
   const [timeLeft, setTimeLeft] = useState({
@@ -46,509 +47,578 @@ export function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    api
+      .get<HackathonListItem[]>("/hackathons?limit=3")
+      .then((res) => {
+        setLiveHackathons(res.data);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
-    <div className="min-h-screen bg-canvas text-ink selection:bg-primary/20">
-      {/* Top Bar Announcement */}
-      <div className="bg-gradient-to-r from-primary via-indigo-600 to-accent-blue px-4 py-2 text-center text-xs font-semibold text-white">
-        <span className="inline-flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
-          Web3 BUIDL Global &amp; NeuroGrid AI registrations are now live!
-          <Link to="/app/hackathons" className="underline font-bold hover:text-amber-200 ml-1">
-            Browse Events &rarr;
-          </Link>
-        </span>
-      </div>
-
-      {/* Global Header */}
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-8">
-            <Link to="/">
-              <Logo />
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-mute">
-              <Link to="/app/hackathons" className="hover:text-ink transition">
-                Explore Hackathons
-              </Link>
-              <Link to="/companies" className="hover:text-ink transition">
-                Companies &amp; Organizers
-              </Link>
-              <Link to="/projects" className="hover:text-ink transition">
-                Projects Showcase
-              </Link>
-              <Link to="/host" className="text-primary hover:text-primary-dark transition font-bold flex items-center gap-1">
-                <Sparkles className="h-3 w-3" /> Host a Hackathon
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {token ? (
-              <Link to="/app">
-                <Button variant="primary" className="text-xs py-2 gap-1.5">
-                  Open Workspace <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="ghost" className="text-xs py-2">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="primary" className="text-xs py-2">
-                    Join as Builder
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <div className="text-slate-100 overflow-x-hidden">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden px-6 pt-16 pb-20 md:pt-24 md:pb-28 border-b border-line/60 bg-gradient-to-b from-white via-canvas to-canvas">
-        {/* Glow ambient background elements */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-tr from-primary/15 via-accent-blue/10 to-transparent blur-3xl pointer-events-none rounded-full" />
+      <section className="relative overflow-hidden px-4 sm:px-6 pt-16 pb-24 md:pt-24 md:pb-32 border-b border-white/5">
+        {/* Glowing Background Radial Orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[450px] bg-gradient-to-tr from-purple-600/20 via-violet-500/15 to-transparent blur-3xl pointer-events-none rounded-full" />
+        <div className="absolute -top-40 right-10 w-[400px] h-[400px] bg-pink-500/10 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute top-60 -left-20 w-[400px] h-[400px] bg-indigo-500/10 blur-[120px] pointer-events-none rounded-full" />
 
         <div className="relative mx-auto max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary shadow-sm">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-              The Autonomous Hackathon Platform
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Content (7 Cols) */}
+            <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+              {/* Top Shimmer Pill Chip */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/40 bg-purple-500/10 px-4 py-1.5 text-xs font-bold text-purple-300 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-spin" style={{ animationDuration: "6s" }} />
+                <span>Discover Your Next Big Opportunity</span>
+              </div>
+
+              {/* Headline (Matching uploaded images) */}
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.12]">
+                Explore Your <br />
+                Creativity with{" "}
+                <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-300 bg-clip-text text-transparent">
+                  HackNova
+                </span>
+              </h1>
+
+              {/* Subheadline */}
+              <p className="text-sm md:text-base text-slate-300 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+                Join premier hackathons worldwide to elevate your standards of creativity and innovation. Assemble AI-matched squads, build with an autonomous Groq-powered AI Copilot, and climb the live podium leaderboard.
+              </p>
+
+              {/* Call to Actions */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
+                <Link to="/hackathons">
+                  <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_25px_rgba(168,85,247,0.45)] hover:from-purple-500 hover:to-indigo-500 hover:shadow-[0_0_35px_rgba(168,85,247,0.6)] hover:-translate-y-0.5 transition-all">
+                    <Compass className="h-4 w-4" />
+                    <span>Explore Hackathons</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+
+                <Link to="/host">
+                  <button className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold text-slate-200 hover:bg-white/10 hover:border-purple-400/40 hover:text-white transition-all">
+                    <Building2 className="h-4 w-4 text-purple-400" />
+                    <span>Host a Hackathon</span>
+                  </button>
+                </Link>
+              </div>
+
+              {/* Small Trust Line */}
+              <div className="flex items-center justify-center lg:justify-start gap-4 pt-4 text-xs text-slate-400 font-medium">
+                <div className="flex -space-x-2 overflow-hidden">
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#0A0D14]" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=faces" alt="avatar" />
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#0A0D14]" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=faces" alt="avatar" />
+                  <img className="inline-block h-6 w-6 rounded-full ring-2 ring-[#0A0D14]" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=64&h=64&fit=crop&crop=faces" alt="avatar" />
+                </div>
+                <span>Joined by <strong className="text-white">4,200+ engineers</strong> across 85+ verified organizations</span>
+              </div>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-ink leading-[1.12]">
-              Build. Compete.{" "}
-              <span className="bg-gradient-to-r from-primary via-indigo-600 to-accent-blue bg-clip-text text-transparent">
-                Collaborate.
-              </span>{" "}
-              Innovate.
-            </h1>
+            {/* Right Hero Visual Mockup (Matching Image 1) */}
+            <div className="lg:col-span-5 relative flex justify-center">
+              {/* Glowing Aura Behind Mockup */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-indigo-500/20 blur-2xl rounded-3xl" />
 
-            <p className="text-sm md:text-base text-mute font-medium leading-relaxed max-w-2xl mx-auto">
-              Your gateway to premier hackathons, innovation challenges, verified industry sponsors,
-              and AI-powered squad assembly. Built for high-velocity engineering.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
-              <Link to="/app/hackathons">
-                <Button variant="primary" className="px-7 py-3 text-sm font-bold shadow-lift gap-2">
-                  <Compass className="h-4 w-4" />
-                  Explore Hackathons
-                </Button>
-              </Link>
-              <Link to="/host">
-                <Button variant="secondary" className="px-6 py-3 text-sm font-bold border-line hover:border-primary/40 gap-2">
-                  <Building2 className="h-4 w-4 text-primary" />
-                  Host a Hackathon
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Live Platform Stats Counter Bar */}
-          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto">
-            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
-              <div className="text-3xl font-black text-ink tracking-tight">12+</div>
-              <div className="text-xs font-semibold text-mute mt-1">Active Hackathons</div>
-            </Card>
-
-            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
-              <div className="text-3xl font-black text-primary tracking-tight">4,200+</div>
-              <div className="text-xs font-semibold text-mute mt-1">Registered Innovators</div>
-            </Card>
-
-            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
-              <div className="text-3xl font-black text-emerald-600 tracking-tight">85+</div>
-              <div className="text-xs font-semibold text-mute mt-1">Verified Organizations</div>
-            </Card>
-
-            <Card className="p-5 text-center bg-surface-card/85 backdrop-blur-md border-line shadow-glow hover:border-cyan/40 transition">
-              <div className="text-3xl font-black text-accent-blue tracking-tight">$350,000+</div>
-              <div className="text-xs font-semibold text-mute mt-1">Prizes &amp; Grants</div>
-            </Card>
-          </div>
-
-          {/* Featured Hackathon Spotlight Banner */}
-          <div className="mt-14 max-w-5xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden border border-primary/40 bg-slate-900 text-white shadow-lift">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-slate-900 to-black opacity-90" />
-              <div className="relative p-6 sm:p-8 md:p-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                <div className="space-y-3 max-w-xl">
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="bg-emerald-500/20 text-emerald-300 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-                      ⚡ Featured Sprint
-                    </span>
-                    <span className="bg-white/10 text-slate-300 px-3 py-1 rounded-full">
-                      Pune + Hybrid
-                    </span>
-                    <span className="bg-amber-400/20 text-amber-300 font-bold px-3 py-1 rounded-full border border-amber-400/30">
-                      $25,000 Prize Pool
-                    </span>
+              {/* Laptop & Floating Widgets Container */}
+              <div className="relative w-full max-w-md p-6 rounded-3xl border border-white/15 bg-slate-900/80 backdrop-blur-xl shadow-2xl space-y-4">
+                {/* Simulated Screen Header */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   </div>
-
-                  <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                    PulseForge HealthHack 2026
-                  </h3>
-
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    48 hours to redesign emergency capacity telemetry with responsible AI. Clinical mentors
-                    from municipal hospitals and deep-tech engineers guide your squad from challenge to working prototype.
-                  </p>
+                  <span className="text-[11px] font-mono text-purple-300 font-bold">HackNova v2.0 Workspace</span>
                 </div>
 
-                {/* Countdown Card */}
-                <div className="flex flex-col items-center sm:items-end gap-4 shrink-0">
-                  <div className="text-xs font-bold text-amber-300 uppercase tracking-widest">
-                    Registration Closing In:
+                {/* Simulated Laptop Screen Body */}
+                <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-950/70 via-slate-950 to-indigo-950/80 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                      <Zap className="h-4 w-4 text-amber-300" />
+                      Live Sprint Active
+                    </span>
+                    <Badge tone="success">In Progress</Badge>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[58px]">
-                      <div className="text-lg font-black text-white">{timeLeft.days}</div>
-                      <div className="text-[10px] text-slate-400 uppercase">Days</div>
+                  <h3 className="font-bold text-base text-white">
+                    Emergency Capacity Signal
+                  </h3>
+                  <p className="text-xs text-slate-300 line-clamp-2">
+                    Real-time hospital capacity telemetry & coordination dashboard with live Groq AI Copilot.
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {["FastAPI", "React", "Groq AI", "PostgreSQL"].map((t) => (
+                      <span key={t} className="rounded-md border border-purple-400/20 bg-purple-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-200">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Floating Glassmorphic Pill 1: Registration Deadline (from user image) */}
+                <div className="rounded-2xl border border-white/20 bg-white/95 text-slate-900 p-3 shadow-lift flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                      <Calendar className="h-4 w-4" />
                     </div>
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[58px]">
-                      <div className="text-lg font-black text-white">{timeLeft.hours}</div>
-                      <div className="text-[10px] text-slate-400 uppercase">Hours</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[58px]">
-                      <div className="text-lg font-black text-white">{timeLeft.minutes}</div>
-                      <div className="text-[10px] text-slate-400 uppercase">Mins</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[58px]">
-                      <div className="text-lg font-black text-amber-400">{timeLeft.seconds}</div>
-                      <div className="text-[10px] text-slate-400 uppercase">Secs</div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-slate-500">Registration Deadline</div>
+                      <div className="text-xs font-black text-slate-900">2026 Live Sprints Active</div>
                     </div>
                   </div>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                </div>
 
-                  <Link to="/app/hackathons">
-                    <Button variant="primary" className="text-xs py-2.5 px-6 shadow-glow font-bold gap-2">
-                      Join PulseForge Sprint <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                {/* Floating Glassmorphic Pill 2: Prize Pool (from user image) */}
+                <div className="rounded-2xl border border-white/20 bg-white/95 text-slate-900 p-3 shadow-lift flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 text-white font-black text-sm">
+                      $
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-slate-500">Total Prize Pool</div>
+                      <div className="text-xs font-black text-slate-900">$350,000+ USD & Grants</div>
+                    </div>
+                  </div>
+                  <Badge tone="primary">Global</Badge>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Metric Stats Banner */}
+          <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md text-center hover:border-purple-500/40 transition">
+              <div className="text-3xl font-black text-white tracking-tight">15+</div>
+              <div className="text-xs font-semibold text-slate-400 mt-1">Active Hackathons</div>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md text-center hover:border-purple-500/40 transition">
+              <div className="text-3xl font-black text-purple-400 tracking-tight">4,200+</div>
+              <div className="text-xs font-semibold text-slate-400 mt-1">Registered Innovators</div>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md text-center hover:border-purple-500/40 transition">
+              <div className="text-3xl font-black text-emerald-400 tracking-tight">85+</div>
+              <div className="text-xs font-semibold text-slate-400 mt-1">Verified Organizations</div>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-md text-center hover:border-purple-500/40 transition">
+              <div className="text-3xl font-black text-pink-400 tracking-tight">$350,000+</div>
+              <div className="text-xs font-semibold text-slate-400 mt-1">Prizes &amp; Grants</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* THREE PERSONAS SECTION */}
-      <section className="py-20 px-6 max-w-7xl mx-auto space-y-12">
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-primary uppercase tracking-widest">Three-Sided Ecosystem</span>
-          <h2 className="text-3xl md:text-4xl font-black text-ink tracking-tight">
-            Designed for the Entire Innovation Lifecycle
+      {/* COMPREHENSIVE SERVICES & FEATURES SECTION */}
+      <section id="services" className="py-24 px-4 sm:px-6 max-w-7xl mx-auto space-y-16">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-bold text-purple-300">
+            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+            Complete Autonomous Suite
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+            Everything You Need from Registration to Podium
           </h2>
-          <p className="text-xs md:text-sm text-mute">
-            Whether you are building the next breakout unicorn, sponsoring domain challenges, or governing
-            university cohorts.
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-2xl mx-auto">
+            HackNova is not just a form or listing directory — it is a full-stack execution engine providing AI squad assembly, live project workspaces, AI sprint coaching, and transparent judging rubrics.
           </p>
         </div>
 
-        {/* Persona Switcher Tabs */}
-        <div className="flex justify-center">
-          <div className="inline-flex rounded-btn border border-line bg-surface p-1.5 shadow-sm">
-            <button
-              onClick={() => setActivePersona("students")}
-              className={`px-5 py-2 text-xs font-bold rounded-lg transition ${
-                activePersona === "students"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-mute hover:text-ink"
-              }`}
-            >
-              👩‍💻 For Students &amp; Builders
-            </button>
-            <button
-              onClick={() => setActivePersona("companies")}
-              className={`px-5 py-2 text-xs font-bold rounded-lg transition ${
-                activePersona === "companies"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-mute hover:text-ink"
-              }`}
-            >
-              🏢 For Companies &amp; Organizers
-            </button>
-            <button
-              onClick={() => setActivePersona("admins")}
-              className={`px-5 py-2 text-xs font-bold rounded-lg transition ${
-                activePersona === "admins"
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-mute hover:text-ink"
-              }`}
-            >
-              🛡️ For Administrators
-            </button>
-          </div>
-        </div>
+        {/* 6 Core Services Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Service 1: Hackathon Discovery */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-md">
+                <Compass className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">1. Hackathon Discovery & Challenges</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Discover premier virtual and hybrid hackathons organized by verified enterprises and foundations. Access structured problem statements with clear constraints, target users, and evaluation rubrics.
+              </p>
+            </div>
+            <Link to="/hackathons" className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 pt-2">
+              Explore Open Challenges &rarr;
+            </Link>
+          </Card>
 
-        {/* Persona Content Display */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {activePersona === "students" && (
-            <>
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <Compass className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Multi-Hackathon Freedom</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Participate in multiple hackathons simultaneously without account locks. Distinct squad
-                  Kanban boards, scoped problem statements, and intelligent overlap detection.
-                </p>
-              </Card>
+          {/* Service 2: AI Teammate Matching */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-fuchsia-600 to-purple-600 text-white shadow-md">
+                <Users className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">2. AI Squad Assembly & Matchmaking</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Never build alone. Our smart recommender examines candidate proficiencies, domain strengths, and availability against your team's unfilled skills, generating AI match compatibility explanations.
+              </p>
+            </div>
+            <Link to="/register" className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 pt-2">
+              Find Your Dream Squad &rarr;
+            </Link>
+          </Card>
 
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent-blue/10 text-accent-blue">
-                  <Users className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">AI Teammate Assembly</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Never hack alone. Our compatibility engine matches missing frontend, backend, AI, or UI/UX
-                  capabilities with explainable fit scores and instant invite links.
-                </p>
-              </Card>
+          {/* Service 3: AI Sprint Copilot */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white shadow-md">
+                <Bot className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">3. AI Sprint Copilot (Groq LLM)</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Integrated 24/7 technical mentor powered by ultra-low-latency Groq models. Automatically decomposes complex challenge statements into actionable sprint tasks and advises on MVP architecture.
+              </p>
+            </div>
+            <div className="text-xs font-semibold text-cyan-400 pt-2">
+              ⚡ Powered by Groq Models
+            </div>
+          </Card>
 
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                  <Trophy className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Verified Builder Showcase</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Publish prototypes to your immutable builder profile. Win industry bounties, capture recruiter
-                  visibility, and claim sponsored grants.
-                </p>
-              </Card>
-            </>
-          )}
+          {/* Service 4: Project Workspace */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-md">
+                <Kanban className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">4. Autonomous Project Workspace</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Full-featured Kanban sprint board with real-time drag-and-drop task tracking, deadline milestones, shared team notes, pre-flight checklists, and full audit activity logging.
+              </p>
+            </div>
+            <Link to="/register" className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 pt-2">
+              Explore Workspace Tools &rarr;
+            </Link>
+          </Card>
 
-          {activePersona === "companies" && (
-            <>
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">5-Step Event Wizard</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Launch challenges with curated problem statements, timeline guards, judging rubrics,
-                  and custom prize pool distribution in under 10 minutes.
-                </p>
-              </Card>
+          {/* Service 5: Final Submission & Judging */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white shadow-md">
+                <Award className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">5. Deliverable Submission & Judging</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Submit repository code, live demo links, Loom videos, slide decks, and architecture notes. Industry judges evaluate each deliverable using weighted criteria rubrics with feedback.
+              </p>
+            </div>
+            <div className="text-xs font-semibold text-amber-400 pt-2">
+              ✓ Weighted Multi-Judge Scoring
+            </div>
+          </Card>
 
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                  <CheckCircle2 className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Verified Partner Status</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Receive a verified company profile in the public directory, build talent pipelines,
-                  and review student submission repositories with rubric-based scoring.
-                </p>
-              </Card>
-
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent-blue/10 text-accent-blue">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Real-Time Cohort Analytics</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Monitor active teams, problem selection velocity, sprint progress, and submission completion
-                  rates from a dedicated organizer view.
-                </p>
-              </Card>
-            </>
-          )}
-
-          {activePersona === "admins" && (
-            <>
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Ecosystem Governance</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Full control over event lifecycle transitions (draft, published, active, completed, archived)
-                  with rigorous rubric weight validations.
-                </p>
-              </Card>
-
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/10 text-amber-600">
-                  <Layers className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Cross-Squad Supervision</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Monitor participants across all collegiate institutions with comma-separated multi-squad tracking
-                  and zero email exposure leaks.
-                </p>
-              </Card>
-
-              <Card className="p-6 space-y-3 border-line hover:border-primary/40 transition">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent-blue/10 text-accent-blue">
-                  <Zap className="h-5 w-5" />
-                </div>
-                <h3 className="text-base font-bold text-ink">Deterministic APIs</h3>
-                <p className="text-xs text-mute leading-relaxed">
-                  Engineered with primary-key tie-breakers, robust database constraints, and full test suite
-                  resilience across high-volume registration surges.
-                </p>
-              </Card>
-            </>
-          )}
+          {/* Service 6: Live Leaderboard & Showcase */}
+          <Card className="p-6 space-y-4 border border-white/10 bg-slate-900/50 hover:border-purple-500/40 hover:shadow-[0_0_25px_rgba(168,85,247,0.15)] transition-all flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-pink-600 to-rose-600 text-white shadow-md">
+                <Trophy className="h-6 w-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white">6. Podium Leaderboard & Showcase</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Real-time leaderboard ranking with Gold, Silver, and Bronze awards. Winning prototypes are published to the public Project Showcase for investor exposure and hiring opportunities.
+              </p>
+            </div>
+            <Link to="/projects" className="inline-flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 pt-2">
+              Browse Project Showcase &rarr;
+            </Link>
+          </Card>
         </div>
       </section>
 
-      {/* AI ENGINE SHOWCASE */}
-      <section className="bg-slate-950 text-white py-20 px-6 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary/20 text-indigo-300 px-3.5 py-1 text-xs font-bold border border-primary/30">
-              <Cpu className="h-3.5 w-3.5" /> Explainable Intelligence
-            </span>
+      {/* FEATURED SPRINT SPOTLIGHT */}
+      <section className="py-16 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="relative rounded-3xl overflow-hidden border border-purple-500/30 bg-slate-900/90 p-8 md:p-12 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-900/40 via-slate-900 to-black pointer-events-none" />
 
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
-              AI Teammate Matching &amp; Skill-Gap Analysis
-            </h2>
-
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              HackNova does not use opaque black-boxes. Every recommendation inspects your squad&apos;s
-              chosen problem statement, calculates capability gaps across backend, frontend, AI, and design,
-              and returns candidates with mathematical compatibility rationale.
-            </p>
-
-            <div className="space-y-3 pt-2 text-xs">
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 grid place-items-center shrink-0 mt-0.5">
-                  ✓
-                </div>
-                <div>
-                  <strong className="text-white">Domain &amp; Skill Coverage:</strong> Vectorized scoring ensures squads
-                  have complementary strengths rather than redundant duplicate roles.
-                </div>
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="space-y-4 max-w-xl">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="bg-purple-500/20 text-purple-300 font-bold px-3 py-1 rounded-full border border-purple-500/30 flex items-center gap-1">
+                  <Flame className="h-3.5 w-3.5 text-amber-400" /> Featured Sprint
+                </span>
+                <span className="bg-white/10 text-slate-300 px-3 py-1 rounded-full">
+                  Hybrid &bull; Pune / Global
+                </span>
+                <span className="bg-amber-400/20 text-amber-300 font-bold px-3 py-1 rounded-full border border-amber-400/30">
+                  $25,000 Prize Pool
+                </span>
               </div>
 
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 grid place-items-center shrink-0 mt-0.5">
-                  ✓
-                </div>
-                <div>
-                  <strong className="text-white">Availability Compatibility:</strong> Matches weekday vs weekend
-                  working patterns so teams never stall during build sprints.
-                </div>
-              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-white">
+                PulseForge HealthHack 2026
+              </h3>
 
-              <div className="flex items-start gap-3">
-                <div className="h-5 w-5 rounded-full bg-emerald-500/20 text-emerald-400 grid place-items-center shrink-0 mt-0.5">
-                  ✓
-                </div>
-                <div>
-                  <strong className="text-white">Strict Hackathon Scoping:</strong> Automatically permits builders to
-                  recruit talent active in other hackathons while preventing same-event poaching.
-                </div>
-              </div>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                48 hours to redesign emergency capacity telemetry with responsible AI. Clinical mentors from municipal hospitals guide your squad from challenge statement to working prototype.
+              </p>
             </div>
 
-            <div className="pt-2">
-              <Link to={token ? "/app/team/find" : "/login"}>
-                <Button variant="primary" className="text-xs py-2.5 px-6 font-bold shadow-glow gap-2">
-                  Try AI Teammate Finder <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
+            {/* Countdown Box */}
+            <div className="flex flex-col items-start lg:items-end gap-4 shrink-0">
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-widest">
+                Registration Deadline Approaching:
+              </span>
+
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[60px]">
+                  <div className="text-xl font-black text-white">{timeLeft.days}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Days</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[60px]">
+                  <div className="text-xl font-black text-white">{timeLeft.hours}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Hours</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[60px]">
+                  <div className="text-xl font-black text-white">{timeLeft.minutes}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Mins</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2 rounded-xl min-w-[60px]">
+                  <div className="text-xl font-black text-amber-400">{timeLeft.seconds}</div>
+                  <div className="text-[10px] text-slate-400 uppercase">Secs</div>
+                </div>
+              </div>
+
+              <Link to="/hackathons">
+                <button className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all">
+                  Join PulseForge Sprint &rarr;
+                </button>
               </Link>
             </div>
           </div>
-
-          {/* Code / Visual Box */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-6 space-y-4 shadow-2xl font-mono text-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-slate-400">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
-                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
-                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                <span className="text-[11px] font-sans ml-2 text-slate-300">compatibility_matrix.py</span>
-              </div>
-              <span className="text-[10px] text-emerald-400 font-sans">Model: weighted-v1</span>
-            </div>
-
-            <div className="space-y-2 text-slate-300">
-              <p className="text-slate-500"># Evaluating candidate suitability for squad...</p>
-              <p><span className="text-purple-400">target_problem</span> = &quot;Autonomous Drone Pathfinding&quot;</p>
-              <p><span className="text-purple-400">c_target</span> = [&quot;Robotics&quot;, &quot;Computer Vision&quot;, &quot;PyTorch&quot;]</p>
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5 font-sans">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-slate-300 font-bold">Candidate: Meera Joshi (AI/ML)</span>
-                  <span className="text-emerald-400 font-black">Score: 94%</span>
-                </div>
-                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-emerald-400 h-full w-[94%]" />
-                </div>
-                <p className="text-[10px] text-slate-400 pt-1">
-                  Reason: Bridges critical missing capability in PyTorch &amp; Computer Vision. High schedule availability alignment.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* VERIFIED ORGANIZERS LOGO STRIP */}
-      <section className="py-16 px-6 max-w-7xl mx-auto space-y-8">
-        <div className="text-center space-y-1">
-          <span className="text-[11px] font-bold text-mute uppercase tracking-widest">
-            Trusted by Top Industry Teams &amp; University Cells
-          </span>
+      {/* LIVE HACKATHONS DIRECT FEED */}
+      {liveHackathons.length > 0 && (
+        <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black text-white">Active Hackathons Right Now</h3>
+              <p className="text-xs text-slate-400">Join a verified sprint, assemble a squad, and start hacking.</p>
+            </div>
+            <Link to="/hackathons" className="text-xs font-bold text-purple-400 hover:text-purple-300">
+              View All &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {liveHackathons.slice(0, 3).map((hack) => (
+              <Card key={hack.id} className="p-6 border border-white/10 bg-slate-900/60 hover:border-purple-500/40 transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                      {hack.status}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {hack.location || "Online"}
+                    </span>
+                  </div>
+                  <h4 className="text-base font-bold text-white line-clamp-1">{hack.name}</h4>
+                  <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">{hack.short_description}</p>
+                </div>
+                <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-400">
+                    {hack.team_count} Teams &bull; {hack.problem_count} Challenges
+                  </span>
+                  <Link to={`/hackathons/${hack.id}`} className="text-xs font-bold text-purple-300 hover:text-white">
+                    Details &rarr;
+                  </Link>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* THREE PERSONAS / HOW IT WORKS */}
+      <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto space-y-12">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">Built For Innovators</span>
+          <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
+            Designed for the Entire Innovation Ecosystem
+          </h2>
+          <p className="text-xs md:text-sm text-slate-400">
+            Select your role to see how HackNova accelerates your hackathon journey.
+          </p>
+
+          <div className="flex justify-center gap-2 pt-4">
+            <button
+              onClick={() => setActivePersona("builders")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activePersona === "builders"
+                  ? "bg-purple-600 text-white shadow-glow"
+                  : "bg-white/5 text-slate-400 hover:text-white"
+              }`}
+            >
+              Builders &amp; Students
+            </button>
+            <button
+              onClick={() => setActivePersona("companies")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activePersona === "companies"
+                  ? "bg-purple-600 text-white shadow-glow"
+                  : "bg-white/5 text-slate-400 hover:text-white"
+              }`}
+            >
+              Companies &amp; Sponsors
+            </button>
+            <button
+              onClick={() => setActivePersona("judges")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activePersona === "judges"
+                  ? "bg-purple-600 text-white shadow-glow"
+                  : "bg-white/5 text-slate-400 hover:text-white"
+              }`}
+            >
+              Judges &amp; Mentors
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 items-center justify-center">
-          {VERIFIED_COMPANIES.map((c) => (
-            <Link
-              key={c.id}
-              to="/companies"
-              className="p-4 rounded-xl border border-line bg-surface-card hover:border-cyan/40 hover:shadow-glow hover:shadow-card transition flex flex-col items-center text-center gap-2"
-            >
-              <img src={c.logo} alt={c.name} className="h-8 w-8 rounded-lg object-cover" />
-              <span className="text-[11px] font-bold text-ink line-clamp-1">{c.name.split(" ")[0]}</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {activePersona === "builders" ? (
+            <>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 1</div>
+                <h4 className="font-bold text-white text-base">Register Profile &amp; Match</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Showcase your skills in AI/ML, frontend, or smart contracts. Let our recommender match you with complementary squad members.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 2</div>
+                <h4 className="font-bold text-white text-base">Build with AI Copilot</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Work in your squad Kanban board. Prompt the Groq AI Copilot for architecture advice, API structures, and task breakdowns.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 3</div>
+                <h4 className="font-bold text-white text-base">Submit &amp; Win</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Submit code, demo links, and video pitches. Receive weighted judge evaluations and compete for 1st place gold podium glory.
+                </p>
+              </Card>
+            </>
+          ) : activePersona === "companies" ? (
+            <>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 1</div>
+                <h4 className="font-bold text-white text-base">Define Challenges</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Publish real problem statements with technical constraints and criteria. Set custom prize pools and dates.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 2</div>
+                <h4 className="font-bold text-white text-base">Engage Top Builders</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Observe thousands of verified engineers actively building solutions using your developer APIs and SDKs.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 3</div>
+                <h4 className="font-bold text-white text-base">Hire &amp; Incubate</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Identify exceptional teams through weighted rubric scores and fast-track them to grant funding or full-time roles.
+                </p>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 1</div>
+                <h4 className="font-bold text-white text-base">Review Submissions</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Directly inspect source code repos, live preview deployments, and pitch walkthroughs submitted by teams.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 2</div>
+                <h4 className="font-bold text-white text-base">Objective Scoring</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Score projects seamlessly on a 1.0–10.0 scale across weighted criteria: innovation, architecture, execution, and presentation.
+                </p>
+              </Card>
+              <Card className="p-6 border border-white/10 bg-slate-900/60 space-y-2">
+                <div className="text-xs font-bold text-purple-400 uppercase font-mono">Step 3</div>
+                <h4 className="font-bold text-white text-base">Publish Leaderboard</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Scores automatically aggregate into live public leaderboards, assigning Gold, Silver, and Bronze awards to the top squads.
+                </p>
+              </Card>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* FINAL CALL TO ACTION BANNER */}
+      <section className="py-20 px-4 sm:px-6 max-w-5xl mx-auto text-center">
+        <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-r from-purple-900/50 via-slate-900 to-indigo-900/50 p-10 md:p-16 space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 w-64 h-64 bg-pink-500/20 blur-3xl pointer-events-none rounded-full" />
+          <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-purple-500/20 blur-3xl pointer-events-none rounded-full" />
+
+          <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+            Ready to Build Something Extraordinary?
+          </h2>
+
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+            Join thousands of innovators solving real-world challenges. Create your builder account today or host your next flagship hackathon.
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <Link to="/register">
+              <button className="rounded-xl bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 px-8 py-3.5 text-sm font-bold text-white shadow-[0_0_25px_rgba(168,85,247,0.45)] hover:from-purple-500 hover:to-indigo-500 transition-all">
+                Create Free Account
+              </button>
             </Link>
-          ))}
+            <Link to="/hackathons">
+              <button className="rounded-xl border border-white/20 bg-white/5 px-7 py-3.5 text-sm font-bold text-slate-200 hover:bg-white/10 transition-all">
+                Browse Live Sprints
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-line bg-surface px-6 py-12 text-xs text-mute">
+      <footer className="border-t border-white/10 py-12 px-4 sm:px-6 bg-[#080A10] text-xs text-slate-400">
         <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1 text-center md:text-left">
-            <Logo />
-            <p className="text-[11px] text-mute pt-1">
-              &copy; {new Date().getFullYear()} HackNova. The human-centric hackathon infrastructure.
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="font-black text-white text-base">HackNova</span>
+            <span>&bull;</span>
+            <span>Autonomous Hackathon &amp; Open Innovation Platform</span>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 font-semibold">
-            <Link to="/app/hackathons" className="hover:text-ink transition">
-              Hackathons
-            </Link>
-            <Link to="/companies" className="hover:text-ink transition">
-              Companies
-            </Link>
-            <Link to="/projects" className="hover:text-ink transition">
-              Showcase
-            </Link>
-            <Link to="/host" className="hover:text-ink transition">
-              Host Hackathon
-            </Link>
-            <Link to="/login" className="hover:text-ink transition">
-              Sign In
-            </Link>
-            <Link to="/register" className="hover:text-ink transition">
-              Register
-            </Link>
+          <div className="flex flex-wrap items-center gap-6 font-semibold">
+            <Link to="/hackathons" className="hover:text-white transition">Hackathons</Link>
+            <Link to="/projects" className="hover:text-white transition">Showcase</Link>
+            <Link to="/companies" className="hover:text-white transition">Companies</Link>
+            <Link to="/host" className="hover:text-white transition">Host Event</Link>
+            <Link to="/login" className="hover:text-white transition">Sign In</Link>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
+          <div>&copy; {new Date().getFullYear()} HackNova Ecosystem. All rights reserved.</div>
+          <div className="flex items-center gap-4">
+            <span>Powered by Groq LLM &amp; FastAPI</span>
+            <span>&bull;</span>
+            <span className="text-emerald-400 flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              All Systems Operational
+            </span>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+export default LandingPage;
