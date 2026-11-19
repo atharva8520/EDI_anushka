@@ -1,0 +1,55 @@
+services:
+  # HackNova Backend API Service (Free Web Service)
+  - type: web
+    name: hacknova-backend
+    env: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES_REMEMBER
+        value: "10080"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hacknova-db
+          property: connectionString
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: LLM_API_KEY
+        sync: false
+
+  # HackNova Frontend Static Site
+  - type: static
+    name: hacknova-frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: hacknova-backend
+          property: url
+
+databases:
+  # HackNova PostgreSQL Database
+  - name: hacknova-db
+    databaseName: hacknova
+    user: hacknova
+    plan: free
