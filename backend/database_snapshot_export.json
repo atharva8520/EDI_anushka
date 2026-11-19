@@ -1,0 +1,1282 @@
+{
+  "users": [
+    {
+      "id": "159afd16578a4d609234f933187d2682",
+      "email": "admin@hacknova.dev",
+      "password_hash": "$2b$12$cCPEcki3UtgBDVIN24Fmve63.kI7OpaNOoBSWqJm6KQgvRVu53oHy",
+      "full_name": "HackNova Organizer",
+      "role": "admin",
+      "college": "HackNova",
+      "branch": "Operations",
+      "year": "Staff",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "cd385d48d162427baa9acc9f68b916d0",
+      "email": "aditi@hacknova.dev",
+      "password_hash": "$2b$12$vkyeS2xcyhCS6gFFKVqoKeHF4HgFTmKdgudAWBgolGTJ3W7aQvcZa",
+      "full_name": "Aditi Sharma",
+      "role": "student",
+      "college": "Pune Institute of Computer Technology",
+      "branch": "CSE-AI",
+      "year": "TY",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "1c877be88208435d9167a6a5b2b343c5",
+      "email": "rahul@hacknova.dev",
+      "password_hash": "$2b$12$rskffH1pN8b6PsL2B/9fE.nrwVRF2uxNrp8obn85a/D/tiYUL8BOC",
+      "full_name": "Rahul Mehta",
+      "role": "student",
+      "college": "VIT Pune",
+      "branch": "CSE",
+      "year": "TY",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "email": "meera@hacknova.dev",
+      "password_hash": "$2b$12$BFcpSfDF8hxSlyx4WfNb/O4MwswLoj9hYstXEyy7shKY1gkejrrVC",
+      "full_name": "Meera Iyer",
+      "role": "student",
+      "college": "COEP Technological University",
+      "branch": "AI & DS",
+      "year": "TY",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "72a246d5698145898a5306d06279e6a6",
+      "email": "kabir@hacknova.dev",
+      "password_hash": "$2b$12$SOWGGuUgO2VLc.ObnLQ86.xnOmUKiKuneXV6o.c5.3UD4DZw3.Fg6",
+      "full_name": "Kabir Joshi",
+      "role": "student",
+      "college": "PICT",
+      "branch": "CSE-AI",
+      "year": "SY",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "cbf3a803a10a41cd8bc378de36d47531",
+      "email": "athrvabawage@gmail.com",
+      "password_hash": "$2b$12$rt9rjiQQRYbmAPR1grjFbOLU5fUAsamgL/UPDoII9y5RpWX90tw/m",
+      "full_name": "Atharv Sachin bawage",
+      "role": "student",
+      "college": "VIIT",
+      "branch": "AIDS",
+      "year": "Final",
+      "is_active": 1,
+      "created_at": "2026-11-19 12:28:02",
+      "updated_at": "2026-11-19 12:28:02"
+    },
+    {
+      "id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "email": "atharv.22311777@viit.ac.in",
+      "password_hash": "$2b$12$Ux4nUwh7D8C0T/1jtDt8/OzVxoFvya1shRaH7NN75OhdK5q4pvk9.",
+      "full_name": "Atharv Sachin bawage",
+      "role": "student",
+      "college": "PICT",
+      "branch": "AI&DS",
+      "year": "TY",
+      "is_active": 1,
+      "created_at": "2026-11-19 18:35:11",
+      "updated_at": "2026-11-19 18:35:11"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "ae34b59cc7944de282991af7b41349b1",
+      "user_id": "159afd16578a4d609234f933187d2682",
+      "bio": "Official organizer account for development.",
+      "github_url": null,
+      "portfolio_url": null,
+      "availability": null,
+      "hackathon_experience": null,
+      "avatar_seed": "organizer",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "e9a3c8de217a4fdeb9aadde0a6e30576",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "bio": "Backend engineer who enjoys turning messy operational problems into reliable APIs.",
+      "github_url": "https://github.com/aditi-demo",
+      "portfolio_url": null,
+      "availability": "flexible",
+      "hackathon_experience": "3 campus hackathons",
+      "avatar_seed": "Aditi Sharma",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "2d76fd635e5b4edf93a32426b81604d4",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "bio": "Frontend specialist focused on dense product dashboards that still feel calm.",
+      "github_url": "https://github.com/rahul-demo",
+      "portfolio_url": null,
+      "availability": "weekends",
+      "hackathon_experience": "Winner, college web hack 2025",
+      "avatar_seed": "Rahul Mehta",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "ad7f9cbe228846038c532942abbeef07",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "bio": "ML engineer interested in evaluation, not just model training.",
+      "github_url": "https://github.com/meera-demo",
+      "portfolio_url": null,
+      "availability": "weekdays",
+      "hackathon_experience": "Research intern, 2 hackathons",
+      "avatar_seed": "Meera Iyer",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "4a5c5a1f420744deb93cb74415229d45",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "bio": "Product-minded builder who keeps teams honest about scope during sprints.",
+      "github_url": "https://github.com/kabir-demo",
+      "portfolio_url": null,
+      "availability": "flexible",
+      "hackathon_experience": "Finalist, Smart India Hackathon internal",
+      "avatar_seed": "Kabir Joshi",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "afc77cc688c34596bc794eb1d0d6b736",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "bio": "AI-ML engineer",
+      "github_url": "https://github.com/atharva8520/EDI_anushka/pull/18",
+      "portfolio_url": "https://www.youtube.com/watch?v=IgK5-PUeARg&list=RDBgmVrguFO4o&index=2",
+      "availability": "flexible",
+      "hackathon_experience": "",
+      "avatar_seed": "Atharv Sachin bawage",
+      "created_at": "2026-11-19 12:28:02",
+      "updated_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "d903b631cc9242d2bf28b084beb41489",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "bio": "",
+      "github_url": "",
+      "portfolio_url": "",
+      "availability": null,
+      "hackathon_experience": "",
+      "avatar_seed": "Atharv Sachin bawage",
+      "created_at": "2026-11-19 18:35:11",
+      "updated_at": "2026-11-19 18:39:59"
+    }
+  ],
+  "skills": [
+    {
+      "id": "58712a0eed6645f9a3155a68b69a98fb",
+      "name": "Python",
+      "category": "Backend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "150d401209a049d5bf5131f816df2a55",
+      "name": "FastAPI",
+      "category": "Backend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "474ae6c12d7f460096adf5aa56e6afb7",
+      "name": "PostgreSQL",
+      "category": "Backend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "628a506b922d4beea386cc4cca519305",
+      "name": "Node.js",
+      "category": "Backend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "27d6342c57c549ff85750a7662e0665a",
+      "name": "React",
+      "category": "Frontend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "79ef3b30745342a98b701f83f8b91eb5",
+      "name": "TypeScript",
+      "category": "Frontend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "4a53f85efd954bf0baa4002e43184480",
+      "name": "Tailwind CSS",
+      "category": "Frontend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "f674b7654dff494188aaed074296ba6b",
+      "name": "Figma",
+      "category": "UI/UX",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "b7e1f45d0699401db312eb943fd7110e",
+      "name": "User Research",
+      "category": "UI/UX",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "6783890c84994a79872e064f1293afc0",
+      "name": "Machine Learning",
+      "category": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "814455aea26a47dca4835ad87f737709",
+      "name": "NLP",
+      "category": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "1d1bd8efb48846b78e5c68f3b37c075a",
+      "name": "Computer Vision",
+      "category": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "598f209390524263b90d7c9518c2c00d",
+      "name": "PyTorch",
+      "category": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "d2bbfa7b67c540eea9a03fc40b4bd61b",
+      "name": "Data Analysis",
+      "category": "Data",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "620c3fe69060432f9e8ace90a4a6946c",
+      "name": "Product Strategy",
+      "category": "Product",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "a2c2a6f51d2f48b0883cba45c32ee130",
+      "name": "Pitching",
+      "category": "Presentation",
+      "created_at": "2026-11-19 12:21:56"
+    }
+  ],
+  "user_skills": [
+    {
+      "id": "fd20cd82895a41198d0d1b02e37a8197",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "skill_id": "58712a0eed6645f9a3155a68b69a98fb",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "6a9d91f256a9472e89183e992bf40dd0",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "skill_id": "150d401209a049d5bf5131f816df2a55",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "fdee050aa41645aab17877e33915a3c7",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "skill_id": "474ae6c12d7f460096adf5aa56e6afb7",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "78ce53219d7b450591f4eb6a613f31e5",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "skill_id": "6783890c84994a79872e064f1293afc0",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "e0e733e7694f497085a987cbf0ac6919",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "skill_id": "27d6342c57c549ff85750a7662e0665a",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "179b2c0b064443629ca7b81da5c3eb0b",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "skill_id": "79ef3b30745342a98b701f83f8b91eb5",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "bbdacfabf1dc4bf1aad000e8c6510401",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "skill_id": "4a53f85efd954bf0baa4002e43184480",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "f3f78b0d550c4fb1bf1956f11be54665",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "skill_id": "f674b7654dff494188aaed074296ba6b",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "a214c0ac7be344f2bd03aaf5d81ee9d1",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "skill_id": "58712a0eed6645f9a3155a68b69a98fb",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "09479b0f80b04116b66bf76937f44c3f",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "skill_id": "598f209390524263b90d7c9518c2c00d",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "b25a9492e3474b069470fce7e1b6a1c6",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "skill_id": "814455aea26a47dca4835ad87f737709",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "10e253607dc349018ac232369ac77f3f",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "skill_id": "d2bbfa7b67c540eea9a03fc40b4bd61b",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "a8a67c2c485845bc957a79764b42880f",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "skill_id": "620c3fe69060432f9e8ace90a4a6946c",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "19576bfc3df1462bae5e211fc9976b79",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "skill_id": "a2c2a6f51d2f48b0883cba45c32ee130",
+      "proficiency": "advanced",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "7ce55abb521f438fb59f6bf8ee8b060d",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "skill_id": "27d6342c57c549ff85750a7662e0665a",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "40a4db9d8d3549b8a481ae4f682221a1",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "skill_id": "150d401209a049d5bf5131f816df2a55",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "4f2fe06f7ba847baa97c73e8e3646b96",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "skill_id": "4a53f85efd954bf0baa4002e43184480",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "73cf3b32e881486ebddb57a37747516a",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "skill_id": "628a506b922d4beea386cc4cca519305",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "3c37f776383747d1966b4ba0e6b0b44d",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "skill_id": "598f209390524263b90d7c9518c2c00d",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "89688e68fd0a4f7b8541f1e6fde9211a",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "skill_id": "814455aea26a47dca4835ad87f737709",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "6f10c58ff6b74b64bca8f36efc964c20",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "1d1bd8efb48846b78e5c68f3b37c075a",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "59a29005dd104f828700374a7d674765",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "6783890c84994a79872e064f1293afc0",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "5d6de08c29d74275a820c04ea388cce2",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "814455aea26a47dca4835ad87f737709",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "347c3124b4344208af9a3ba6e4ea44fa",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "150d401209a049d5bf5131f816df2a55",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "a6aa3e978c084b18ac37fe0eb7b5725d",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "58712a0eed6645f9a3155a68b69a98fb",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "e272d78372cd4af0b840a4a5f5140990",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "d2bbfa7b67c540eea9a03fc40b4bd61b",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "740df7c96e3b4a08af03495e3e0fe95e",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "a2c2a6f51d2f48b0883cba45c32ee130",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "0e0fa0d43584477b91d31ff3123de8a9",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "skill_id": "f674b7654dff494188aaed074296ba6b",
+      "proficiency": "intermediate",
+      "created_at": "2026-11-19 18:39:59"
+    }
+  ],
+  "user_preferred_roles": [
+    {
+      "id": "a7ac22ed4a034881949a5d92785c12a5",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "role_name": "Backend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "dbdcb010abc344588997c5766268f489",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "role_name": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "31ec178d99aa4eb2a418d2784426496b",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "role_name": "Frontend",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "f404b223e7e04f058d6782624b84d97c",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "role_name": "UI/UX",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "c31e634ef76c44da98e4efc34f2eb0cd",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "role_name": "AI/ML",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "adf63543851b4ca697df150db4ee6fd1",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "role_name": "Data",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "d608bc48853d4cbca587b769c0b2eab9",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "role_name": "Product",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "ad3c6cd24fed45d091e10170e0af09f1",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "role_name": "Presentation",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "b3d7c3b84bb34a2fa9c669ccf97d0b4d",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "Frontend",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "0b87bf3ab2be415382d297aa75c27fbc",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "Backend",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "081eed087e18462180845e3f54b980df",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "AI/ML",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "3bf44b2da149494d890c03dc042c04d4",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "UI/UX",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "b70cb78f7de34600958b58c80334700b",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "Data",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "46cd23f80bd94d85bdf279934852d7c9",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "Product",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "ad6092c5c8de4085848b104c33d0c7d9",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "role_name": "Presentation",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "e81bd862c9644f8d8490d6f6f4dbf521",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "Frontend",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "0e4ee46b2b294facbab6846e6af62fe7",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "Backend",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "bee273ab20d04c10b8f025e5cfb9651f",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "AI/ML",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "b27273ef3ff34cfab9d6d9e65911fa89",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "UI/UX",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "45efb39df7b64fd1aa708c0854d8a678",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "Data",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "6808b7abb1c048989a541cfc683109a6",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "Product",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "ed0c14285a664bf3a6933cbaecda74d6",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "role_name": "Presentation",
+      "created_at": "2026-11-19 18:39:59"
+    }
+  ],
+  "user_domain_interests": [
+    {
+      "id": "e37a2050090149e4b871241b8e209dea",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "domain": "Healthcare",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "e68ac3bd360f4c01a673baad47e92345",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "domain": "Civic Tech",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "6891d20c2ca747738cf115e90c6942c3",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "domain": "FinTech",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "fd221218871d43aba0d7ea4c57b3c686",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "domain": "Education",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "f77a331db54c4e2cba38a05dd6e576c6",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "domain": "Healthcare",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "357bae5220d14aa5ad0a3475a7fef42a",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "domain": "Climate",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "5d6b3f60a11041b99ec00918c22e3142",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "domain": "Civic Tech",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "3898f521414c49a2bb2afdbb17cc7198",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "domain": "Education",
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "43e9a90f03ee4237aa72732d9fe46618",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "Healthcare",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "d37d4049e5714c3b9cece33a7525be4b",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "AI/ML",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "30483a276ade48f69796e62a0263b8a3",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "Civic Tech",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "7f53c33239384c0f93837c6c1c4d7c5f",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "Climate",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "b55b8068aa724f69a483a24b1bf273e5",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "FinTech",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "0b7fdb980fa943849c1cbd72c263368e",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "Education",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "880123e66a1e4256a3bf53135da171ed",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "domain": "Data",
+      "created_at": "2026-11-19 12:32:40"
+    },
+    {
+      "id": "ebe88567d0a746a38cb5e89263a8ca14",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "Healthcare",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "f2312cd257b4471d920ada7b2db6cb80",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "AI/ML",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "d27e2800e30d4e16a781c7fe8e5f5ed2",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "Civic Tech",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "43fa82ab5040495783d45a24535a5c33",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "Climate",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "0313df3eb8e94e8b9554eb94a42a3336",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "FinTech",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "dbac6b583a77449b902e9a7f253091fc",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "Education",
+      "created_at": "2026-11-19 18:39:59"
+    },
+    {
+      "id": "38ce5a27534949098f1a0552febbc978",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "domain": "Data",
+      "created_at": "2026-11-19 18:39:59"
+    }
+  ],
+  "previous_projects": [
+    {
+      "id": "ff2d38f70bcf43089053c7bc7cf83907",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "title": "Campus Med Queue",
+      "description": "Reduced OPD wait-time estimates using historical footfall.",
+      "tech_stack": "Python, FastAPI",
+      "year": 2025,
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "e0cf4dae234a48018e6380e2aa4ef876",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "title": "Ledger Lite",
+      "description": "Personal finance visualizer for student clubs.",
+      "tech_stack": "React, TypeScript",
+      "year": 2025,
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "1bc7cd659e8b45149de697bc486b70be",
+      "user_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "title": "AirWatch",
+      "description": "Neighborhood AQI nowcasting prototype.",
+      "tech_stack": "PyTorch, Pandas",
+      "year": 2024,
+      "created_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "1ae68f309cee4017a1e5620e67a5a75b",
+      "user_id": "72a246d5698145898a5306d06279e6a6",
+      "title": "Civic Pulse",
+      "description": "Issue tracker for campus facilities.",
+      "tech_stack": "React, FastAPI",
+      "year": 2025,
+      "created_at": "2026-11-19 12:21:56"
+    }
+  ],
+  "hackathons": [
+    {
+      "id": "14c9b203c521477b8dad53cce8a1de89",
+      "name": "PulseForge HealthHack 2026",
+      "slug": "pulseforge-healthhack-2026",
+      "description": "PulseForge brings clinical mentors and city hospitals together with student teams. Build systems that reduce coordination delay without inventing unsupported medical claims.",
+      "short_description": "48 hours to redesign emergency coordination with responsible AI.",
+      "banner_url": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1600&q=80",
+      "organizer": "PulseForge Labs",
+      "start_date": "2026-12-01",
+      "end_date": "2026-12-03",
+      "registration_deadline": "2026-11-29",
+      "location": "Pune + Hybrid",
+      "team_size_min": 2,
+      "team_size_max": 4,
+      "rules": "Teams of 2\u20134. No fabricated clinical claims. Open-source preferred. Mentors available 10:00\u201322:00 IST. Submissions include repo, 3-minute pitch, and architecture note.",
+      "status": "active",
+      "created_by": "159afd16578a4d609234f933187d2682",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "1982d35e222344e0a06f88437d78a173",
+      "name": "GreenByte Climate Sprint",
+      "slug": "greenbyte-climate-sprint",
+      "description": "GreenByte asks teams to treat climate software as operations, not a poster. Mentors include campus facilities leads and a municipal sustainability cell.",
+      "short_description": "Build climate tools that cities and campuses can actually operate.",
+      "banner_url": "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80",
+      "organizer": "GreenByte Collective",
+      "start_date": "2026-12-17",
+      "end_date": "2026-12-19",
+      "registration_deadline": "2026-12-13",
+      "location": "Bengaluru",
+      "team_size_min": 2,
+      "team_size_max": 4,
+      "rules": "Teams of 2\u20134. Prefer public datasets. Document assumptions. No greenwashing claims.",
+      "status": "published",
+      "created_by": "159afd16578a4d609234f933187d2682",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "8f28f237546647a4a893572183a3fd58",
+      "name": "FinForge Student Capital",
+      "slug": "finforge-student-capital",
+      "description": "FinForge is a published event for teams exploring credit literacy, campus payments, and fraud signals without pretending to be a bank.",
+      "short_description": "Responsible money products for first-time earners.",
+      "banner_url": "https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1600&q=80",
+      "organizer": "FinForge Guild",
+      "start_date": "2027-01-03",
+      "end_date": "2027-01-05",
+      "registration_deadline": "2026-12-29",
+      "location": "Mumbai",
+      "team_size_min": 2,
+      "team_size_max": 5,
+      "rules": "No real money movement. Clearly label simulations. Teams of 2\u20135.",
+      "status": "published",
+      "created_by": "159afd16578a4d609234f933187d2682",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "30910498b7634f668e21774a4313a306",
+      "name": "EduNova Learning Lab",
+      "slug": "edunova-learning-lab",
+      "description": "Internal draft used to practice the organizer workflow. Students should never see this until an admin publishes it.",
+      "short_description": "Draft event for organizers \u2014 not visible to students until published.",
+      "banner_url": "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1600&q=80",
+      "organizer": "EduNova",
+      "start_date": "2027-01-18",
+      "end_date": "2027-01-20",
+      "registration_deadline": "2027-01-13",
+      "location": "Remote",
+      "team_size_min": 2,
+      "team_size_max": 4,
+      "rules": "Draft only.",
+      "status": "draft",
+      "created_by": "159afd16578a4d609234f933187d2682",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    }
+  ],
+  "hackathon_domains": [
+    {
+      "id": "6e1bc71c629d4f4e876d790b98f8db6b",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "domain": "Healthcare"
+    },
+    {
+      "id": "b8ccca92cabe47d7915fd92aefaccdb5",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "domain": "AI/ML"
+    },
+    {
+      "id": "4c8032ad425742889539ef57dbeea52e",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "domain": "Civic Tech"
+    },
+    {
+      "id": "fb8390494ef9430e86fb3574c2462e9c",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "domain": "Climate"
+    },
+    {
+      "id": "4d8759d5771445f983c1bc750d33cd27",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "domain": "Data"
+    },
+    {
+      "id": "c7338fa7829d4e5293989ef1db4d7bd0",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "domain": "Civic Tech"
+    },
+    {
+      "id": "91c3722b402247b29a90f2f3da5e57be",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "domain": "FinTech"
+    },
+    {
+      "id": "d2d55fc4ca6d4c5f8daf0c17e08d4c03",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "domain": "AI/ML"
+    },
+    {
+      "id": "0e0d996970e84b7b91b05ce556446916",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "domain": "Product"
+    },
+    {
+      "id": "0ca107a571914d24bfbeef8014772ce6",
+      "hackathon_id": "30910498b7634f668e21774a4313a306",
+      "domain": "Education"
+    }
+  ],
+  "hackathon_problems": [
+    {
+      "id": "4dbee0eb7f60481586e73239111f2d04",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "code": "PF-01",
+      "title": "Emergency Capacity Coordination",
+      "statement": "City ambulances still call hospitals one by one during surges. Dispatchers lack a shared view of bed availability, specialty coverage, and inbound demand.",
+      "description": "Design a coordination layer that helps dispatchers and hospitals share capacity signals and forecast short-term demand.",
+      "domain": "Healthcare",
+      "target_users": "Ambulance dispatchers, hospital control rooms, municipal emergency cells",
+      "constraints": "No guaranteed live hospital APIs. Must degrade gracefully with delayed or partial data. Cannot replace clinical triage.",
+      "expected_outcome": "A working prototype that visualizes capacity, inbound load, and recommended routing options with explicit uncertainty.",
+      "evaluation_criteria": "Data honesty, operational usefulness, architecture, and demo credibility.",
+      "required_technologies": "Python, maps, time-series, role-based dashboards",
+      "is_published": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "a1f6d6732b164e33af727071afdf078e",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "code": "PF-02",
+      "title": "Post-Discharge Recovery Companion",
+      "statement": "Patients leaving cardiac wards miss follow-up windows because instructions live in paper summaries and fragmented chats.",
+      "description": "Build a recovery companion that turns discharge instructions into check-ins, risk flags, and caregiver alerts.",
+      "domain": "Healthcare",
+      "target_users": "Recently discharged patients, caregivers, outpatient nurses",
+      "constraints": "Must not diagnose. Keep language simple. Work on low-end Android.",
+      "expected_outcome": "A guided 14-day recovery flow with escalation rules a clinician can inspect.",
+      "evaluation_criteria": "Safety of claims, usability, and completeness of the care workflow.",
+      "required_technologies": "React, reminders, structured questionnaires",
+      "is_published": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "d9d9cad3473e49fb881936a6372f3d61",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "code": "GB-01",
+      "title": "Campus Energy Drift Detector",
+      "statement": "Facility teams only notice abnormal electricity use after the monthly bill. Short-lived spikes from labs and events disappear in averages.",
+      "description": "Detect unusual campus energy patterns and explain likely causes without requiring IoT hardware the campus does not have.",
+      "domain": "Climate",
+      "target_users": "Campus facility managers, student sustainability cells",
+      "constraints": "Start from interval meter CSVs. Explain anomalies in plain language.",
+      "expected_outcome": "Anomaly list, likely drivers, and a weekly action digest.",
+      "evaluation_criteria": "Signal quality, explainability, and operational usefulness.",
+      "required_technologies": "Python, time-series, dashboards",
+      "is_published": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "c2c335b546444f1d9df343c6052f7a79",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "code": "FF-01",
+      "title": "First Paycheck Navigator",
+      "statement": "Interns receive their first stipend with no structured help for tax, rent sharing, or scam SMS filtering.",
+      "description": "Create a navigator that explains stipend cashflow and flags likely scam patterns using the user's own labeled examples.",
+      "domain": "FinTech",
+      "target_users": "Student interns, first-time earners",
+      "constraints": "No bank login scraping. Education first, not investment advice.",
+      "expected_outcome": "A stipend plan plus a transparent scam-warning module.",
+      "evaluation_criteria": "Clarity, safety of advice, and prototype completeness.",
+      "required_technologies": "React, classification, explainable rules",
+      "is_published": 1,
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    }
+  ],
+  "judging_criteria": [
+    {
+      "id": "7e1413c857d94ccda7e4b8ce46fca61e",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "title": "Technical depth",
+      "description": "Sound architecture and implementation quality",
+      "weight": 30
+    },
+    {
+      "id": "f8b137cc3f5e42dd9129bf4925ba54cc",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "title": "Impact",
+      "description": "Evidence that the solution could reduce real operational delay",
+      "weight": 25
+    },
+    {
+      "id": "45e30b1a7559466c9c3e0e527d7dd0e9",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "title": "Innovation",
+      "description": "Meaningful differentiation, not novelty for its own sake",
+      "weight": 25
+    },
+    {
+      "id": "3bcf1a9223a24efaa236cfe5ddc90950",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "title": "Communication",
+      "description": "Clarity of problem, constraints, and demo",
+      "weight": 20
+    },
+    {
+      "id": "460b75e03d2c40d1ab397dd731abd570",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "title": "Technical",
+      "description": "Working data pipeline and interface",
+      "weight": 30
+    },
+    {
+      "id": "881fca076c7648dfa76c5e81e5b3c6e5",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "title": "Climate relevance",
+      "description": "Clear environmental outcome",
+      "weight": 30
+    },
+    {
+      "id": "e6f9a90a5c764e0e87b29aacca8681f2",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "title": "Feasibility",
+      "description": "Could a campus or ward operate this?",
+      "weight": 20
+    },
+    {
+      "id": "76263603ae1d42bb8d38c070e37493d2",
+      "hackathon_id": "1982d35e222344e0a06f88437d78a173",
+      "title": "Storytelling",
+      "description": "Honest narrative of impact",
+      "weight": 20
+    },
+    {
+      "id": "2a5f9a3e1a0043d1907a45d6188c9654",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "title": "Product sense",
+      "description": "Clear user and job-to-be-done",
+      "weight": 25
+    },
+    {
+      "id": "f00a2c56a4ab462db671cd43b8c4c214",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "title": "Technical",
+      "description": "Working prototype",
+      "weight": 30
+    },
+    {
+      "id": "a0e0adb7b24d4eecb335aa3efc9269c7",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "title": "Risk awareness",
+      "description": "Fraud, consent, and bias considered",
+      "weight": 25
+    },
+    {
+      "id": "0970491aaf254ca1ae92ef1c02da2049",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "title": "Pitch",
+      "description": "Judge-ready narrative",
+      "weight": 20
+    },
+    {
+      "id": "8c140ea6b2c6403a998eda53cd00ec81",
+      "hackathon_id": "30910498b7634f668e21774a4313a306",
+      "title": "Technical",
+      "description": "Working demo",
+      "weight": 100
+    }
+  ],
+  "teams": [
+    {
+      "id": "3554a4af1eaa4ad5886ce26fa2ab91ae",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "name": "Signal Room",
+      "invite_code": "AFLUBX87",
+      "leader_id": "cd385d48d162427baa9acc9f68b916d0",
+      "created_at": "2026-11-19 12:21:56",
+      "updated_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "87a996ef692749c7a444c1731dff579a",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "name": "hii",
+      "invite_code": "IQEQCL6Q",
+      "leader_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "created_at": "2026-11-19 12:34:15",
+      "updated_at": "2026-11-19 12:34:15"
+    },
+    {
+      "id": "5f90a89447e74bc3ab078b518609c449",
+      "hackathon_id": "8f28f237546647a4a893572183a3fd58",
+      "name": "hell world",
+      "invite_code": "PNP0V0N2",
+      "leader_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "created_at": "2026-11-19 18:35:42",
+      "updated_at": "2026-11-19 18:35:42"
+    }
+  ],
+  "team_members": [
+    {
+      "id": "10078f429acc4d70bfecc15490ff27b9",
+      "team_id": "3554a4af1eaa4ad5886ce26fa2ab91ae",
+      "user_id": "cd385d48d162427baa9acc9f68b916d0",
+      "member_role": "Backend Lead",
+      "status": "active",
+      "joined_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "bbf56218ef63468caf4ac92501b6df74",
+      "team_id": "3554a4af1eaa4ad5886ce26fa2ab91ae",
+      "user_id": "1c877be88208435d9167a6a5b2b343c5",
+      "member_role": "Frontend",
+      "status": "active",
+      "joined_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "7d5cde999d2d4ab096936cc5609fc4d5",
+      "team_id": "87a996ef692749c7a444c1731dff579a",
+      "user_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "member_role": "Team Lead",
+      "status": "active",
+      "joined_at": "2026-11-19 12:34:15.990406"
+    },
+    {
+      "id": "360d4246582f40fea0bc94fdc75aad0b",
+      "team_id": "5f90a89447e74bc3ab078b518609c449",
+      "user_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "member_role": "Team Lead",
+      "status": "active",
+      "joined_at": "2026-11-19 18:35:42.645156"
+    }
+  ],
+  "team_problem_selections": [
+    {
+      "id": "8ec8c1dba67642bdbb50b007cb382712",
+      "team_id": "3554a4af1eaa4ad5886ce26fa2ab91ae",
+      "problem_id": "4dbee0eb7f60481586e73239111f2d04",
+      "selected_by": "cd385d48d162427baa9acc9f68b916d0",
+      "selected_at": "2026-11-19 12:21:56"
+    },
+    {
+      "id": "afd7db8030b748e3823917dc7c704b05",
+      "team_id": "87a996ef692749c7a444c1731dff579a",
+      "problem_id": "c2c335b546444f1d9df343c6052f7a79",
+      "selected_by": "cbf3a803a10a41cd8bc378de36d47531",
+      "selected_at": "2026-11-19 18:38:00"
+    },
+    {
+      "id": "d616a335f1b34a7db9abed7fc32e6464",
+      "team_id": "5f90a89447e74bc3ab078b518609c449",
+      "problem_id": "c2c335b546444f1d9df343c6052f7a79",
+      "selected_by": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "selected_at": "2026-11-19 19:08:20"
+    }
+  ],
+  "team_invites": [
+    {
+      "id": "79c0368a0a0942e6b25d52c2f8e1e5d2",
+      "team_id": "87a996ef692749c7a444c1731dff579a",
+      "inviter_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "invitee_id": "72a246d5698145898a5306d06279e6a6",
+      "status": "pending",
+      "created_at": "2026-11-19 12:34:38"
+    },
+    {
+      "id": "3e435988b0e64308a7f8817a68046d38",
+      "team_id": "87a996ef692749c7a444c1731dff579a",
+      "inviter_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "invitee_id": "7927be594dc74bec8ebaf28ac31d8b9e",
+      "status": "pending",
+      "created_at": "2026-11-19 12:34:39"
+    },
+    {
+      "id": "64cb6a7e26d44274ae298d3655329d6e",
+      "team_id": "87a996ef692749c7a444c1731dff579a",
+      "inviter_id": "cbf3a803a10a41cd8bc378de36d47531",
+      "invitee_id": "1c877be88208435d9167a6a5b2b343c5",
+      "status": "pending",
+      "created_at": "2026-11-19 12:34:40"
+    },
+    {
+      "id": "880c751c340640d882f72a672b87e56c",
+      "team_id": "5f90a89447e74bc3ab078b518609c449",
+      "inviter_id": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "invitee_id": "1c877be88208435d9167a6a5b2b343c5",
+      "status": "pending",
+      "created_at": "2026-11-19 20:20:28"
+    }
+  ],
+  "workspace_tasks": "(sqlite3.OperationalError) no such table: workspace_tasks\n[SQL: SELECT * FROM workspace_tasks]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+  "workspace_activity_logs": "(sqlite3.OperationalError) no such table: workspace_activity_logs\n[SQL: SELECT * FROM workspace_activity_logs]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+  "projects": [
+    {
+      "id": "1f806bbf65f14816b55459caec0f3c9a",
+      "team_id": "5f90a89447e74bc3ab078b518609c449",
+      "title": "111",
+      "summary": "hii",
+      "repo_url": null,
+      "created_by": "044bd7b9f4ae4db28d7ad9058aba9193",
+      "created_at": "2026-11-19 19:14:31",
+      "updated_at": "2026-11-19 19:14:31",
+      "demo_url": null,
+      "video_url": null,
+      "pitch_deck_url": null,
+      "tech_stack": "[]",
+      "is_submitted": 0,
+      "submitted_at": null,
+      "submitted_by": null,
+      "submission_notes": null
+    },
+    {
+      "id": "c0e50e12d5ea410ba6c000177a97e1f3",
+      "team_id": "3554a4af1eaa4ad5886ce26fa2ab91ae",
+      "title": "Emergency Capacity Signal",
+      "summary": "Real-time hospital capacity coordination system",
+      "repo_url": "https://github.com/hacknova/emergency-signal",
+      "created_by": "cd385d48d162427baa9acc9f68b916d0",
+      "created_at": "2026-11-19 19:34:30",
+      "updated_at": "2026-11-19 19:34:30",
+      "demo_url": "https://signal-room.hacknova.dev",
+      "video_url": "https://loom.com/share/emergency-demo",
+      "pitch_deck_url": null,
+      "tech_stack": "[\"FastAPI\", \"React\", \"PostgreSQL\", \"Groq AI\"]",
+      "is_submitted": 1,
+      "submitted_at": "2026-11-19 19:34:30.706778",
+      "submitted_by": "cd385d48d162427baa9acc9f68b916d0",
+      "submission_notes": "Full MVP with Groq Copilot integration, tested and hardened."
+    }
+  ],
+  "project_evaluations": [
+    {
+      "id": "0356464c667b44fcb090568c55c0a19b",
+      "project_id": "c0e50e12d5ea410ba6c000177a97e1f3",
+      "hackathon_id": "14c9b203c521477b8dad53cce8a1de89",
+      "judge_id": "159afd16578a4d609234f933187d2682",
+      "feedback": "Superb architecture and live demo. Groq Copilot features are extremely innovative!",
+      "total_score": "92.0",
+      "created_at": "2026-11-19 19:34:31",
+      "updated_at": "2026-11-19 19:34:31"
+    }
+  ],
+  "criterion_scores": [
+    {
+      "id": "c05d8cca6d454d73bc309970d3cb765c",
+      "evaluation_id": "0356464c667b44fcb090568c55c0a19b",
+      "criterion_id": "7e1413c857d94ccda7e4b8ce46fca61e",
+      "score": "9.2",
+      "notes": null
+    },
+    {
+      "id": "98882ace241c49a48dbab0e017a0a46e",
+      "evaluation_id": "0356464c667b44fcb090568c55c0a19b",
+      "criterion_id": "f8b137cc3f5e42dd9129bf4925ba54cc",
+      "score": "9.2",
+      "notes": null
+    },
+    {
+      "id": "5f4871b71d2c4b369027c91402bd3921",
+      "evaluation_id": "0356464c667b44fcb090568c55c0a19b",
+      "criterion_id": "45e30b1a7559466c9c3e0e527d7dd0e9",
+      "score": "9.2",
+      "notes": null
+    },
+    {
+      "id": "809c889d68304df3a7878c2bcdfb7149",
+      "evaluation_id": "0356464c667b44fcb090568c55c0a19b",
+      "criterion_id": "3bcf1a9223a24efaa236cfe5ddc90950",
+      "score": "9.2",
+      "notes": null
+    }
+  ]
+}
