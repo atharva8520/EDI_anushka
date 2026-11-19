@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import os
 from datetime import date, timedelta
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import hash_password
 from app.database.session import SessionLocal
 from app.models.hackathon import Hackathon, HackathonDomain, HackathonProblem, HackathonStatus, JudgingCriterion
@@ -104,14 +107,41 @@ STUDENTS = [
 ]
 
 
-def seed() -> None:
-    db = SessionLocal()
+def seed(db: Session | None = None) -> None:
+    is_production = (os.getenv("APP_ENV") or settings.APP_ENV).lower() == "production"
+    allow_prod_seed = os.getenv("ALLOW_PRODUCTION_SEED", "").strip().lower() == "true"
+
+    if is_production and not allow_prod_seed:
+        raise RuntimeError(
+            "Seeding is disabled in production environment unless ALLOW_PRODUCTION_SEED=true is set."
+        )
+
+    admin_password = os.getenv("SEED_ADMIN_PASSWORD")
+    student_password = os.getenv("SEED_STUDENT_PASSWORD")
+
+    if is_production:
+        if not admin_password or not student_password:
+            raise ValueError(
+                "In production with ALLOW_PRODUCTION_SEED=true, both SEED_ADMIN_PASSWORD and SEED_STUDENT_PASSWORD environment variables are mandatory."
+            )
+    else:
+        if not admin_password:
+            admin_password = "Admin@12345"
+        if not student_password:
+            student_password = "Student@123"
+
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+
     try:
         admin = db.scalar(select(User).where(User.email == "admin@hacknova.dev"))
+        users: dict[str, User] = {}
         if not admin:
             admin = User(
                 email="admin@hacknova.dev",
-                password_hash=hash_password("Admin@12345"),
+                password_hash=hash_password(admin_password),
                 full_name="HackNova Organizer",
                 role=UserRole.admin,
                 college="HackNova",
@@ -129,11 +159,10 @@ def seed() -> None:
                 skill_map[name] = skill
             db.flush()
 
-            users: dict[str, User] = {}
             for row in STUDENTS:
                 user = User(
                     email=row["email"],
-                    password_hash=hash_password("Student@123"),
+                    password_hash=hash_password(student_password),
                     full_name=row["full_name"],
                     role=UserRole.student,
                     college=row["college"],
@@ -158,6 +187,9 @@ def seed() -> None:
                 db.add(user)
                 users[row["email"]] = user
             db.flush()
+        else:
+            for u in db.scalars(select(User)).all():
+                users[u.email] = u
 
         today = date.today()
         events = [
@@ -470,10 +502,11 @@ def seed() -> None:
 
         db.commit()
         print("Seed complete.")
-        print("Admin: admin@hacknova.dev / Admin@12345")
-        print("Students: aditi@hacknova.dev, rahul@hacknova.dev, meera@hacknova.dev, kabir@hacknova.dev / Student@123")
+        print("Admin: admin@hacknova.dev / " + (admin_password if not is_production else "[SET_VIA_ENV]"))
+        print(f"Students: aditi@hacknova.dev, rahul@hacknova.dev, meera@hacknova.dev, kabir@hacknova.dev / {student_password if not is_production else '[SET_VIA_ENV]'}")
     finally:
-        db.close()
+        if close_session:
+            db.close()
 
 
 if __name__ == "__main__":
