@@ -17,7 +17,7 @@ export function Modal({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-50 grid place-items-center bg-[#111827]/40 p-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/75 backdrop-blur-md p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -28,11 +28,15 @@ export function Modal({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 16, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-lg rounded-card bg-white p-5 shadow-lift"
+            className="w-full max-w-lg rounded-card bg-surface-card border border-slate-700/80 text-ink p-6 shadow-2xl"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold">{title}</h3>
-              <button onClick={onClose} className="rounded-lg p-1 text-mute hover:bg-canvas" aria-label="Close">
+              <h3 className="text-lg font-bold text-ink">{title}</h3>
+              <button
+                onClick={onClose}
+                className="rounded-lg p-1 text-mute hover:bg-slate-800 hover:text-white transition"
+                aria-label="Close"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>

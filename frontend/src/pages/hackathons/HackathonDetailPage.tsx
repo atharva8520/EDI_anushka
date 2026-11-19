@@ -129,7 +129,7 @@ export function HackathonDetailPage() {
         </div>
 
         {/* Hero Card */}
-        <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">
+        <div className="overflow-hidden rounded-card border border-line bg-surface-card/90 shadow-glow">
           {hackathon.banner_url ? (
             <div className="h-48 md:h-64 w-full overflow-hidden relative">
               <img
@@ -168,7 +168,7 @@ export function HackathonDetailPage() {
 
             {/* Meta Grid */}
             <div className="mt-8 grid gap-4 border-t border-line pt-6 sm:grid-cols-2 md:grid-cols-4 text-xs">
-              <div className="rounded-xl bg-canvas p-3 border border-line">
+              <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-700/60">
                 <span className="flex items-center gap-1.5 text-mute font-medium">
                   <Calendar className="h-4 w-4 text-primary" /> Event Dates
                 </span>
@@ -177,21 +177,21 @@ export function HackathonDetailPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl bg-canvas p-3 border border-line">
+              <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-700/60">
                 <span className="flex items-center gap-1.5 text-mute font-medium">
                   <Calendar className="h-4 w-4 text-amber-600" /> Registration Deadline
                 </span>
                 <p className="mt-1 font-bold text-ink">{hackathon.registration_deadline}</p>
               </div>
 
-              <div className="rounded-xl bg-canvas p-3 border border-line">
+              <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-700/60">
                 <span className="flex items-center gap-1.5 text-mute font-medium">
                   <MapPin className="h-4 w-4 text-accent-blue" /> Location
                 </span>
                 <p className="mt-1 font-bold text-ink">{hackathon.location}</p>
               </div>
 
-              <div className="rounded-xl bg-canvas p-3 border border-line">
+              <div className="rounded-xl bg-slate-900/80 p-3 border border-slate-700/60">
                 <span className="flex items-center gap-1.5 text-mute font-medium">
                   <Users className="h-4 w-4 text-accent-violet" /> Squad Limits
                 </span>
@@ -204,12 +204,12 @@ export function HackathonDetailPage() {
         </div>
 
         {/* CTA Bar */}
-        <div className="mt-6 rounded-card border border-primary/20 bg-gradient-to-r from-primary/5 via-accent-blue/5 to-white p-6 shadow-card">
+        <div className="mt-6 rounded-card border border-primary/30 bg-gradient-to-r from-primary/15 via-surface-card to-cyan/10 p-6 shadow-glow">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               {hasTeamInThisHackathon ? (
                 <>
-                  <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
                     <CheckCircle2 className="h-5 w-5" /> Registered with team "{myTeamInHackathon?.name}"
                   </div>
                   <p className="mt-1 text-xs text-mute">
@@ -218,7 +218,7 @@ export function HackathonDetailPage() {
                 </>
               ) : isCompleted || isDeadlinePassed ? (
                 <>
-                  <div className="flex items-center gap-2 text-amber-700 font-bold text-sm">
+                  <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
                     <AlertCircle className="h-5 w-5" /> Registration is closed for this hackathon
                   </div>
                   <p className="mt-1 text-xs text-mute">
@@ -289,7 +289,7 @@ export function HackathonDetailPage() {
                     <Card
                       key={p.id}
                       className={`p-6 transition hover:shadow-lift ${
-                        isSelectedByMyTeam ? "border-emerald-500 bg-emerald-50/20" : ""
+                        isSelectedByMyTeam ? "border-emerald-500/50 bg-emerald-950/20 shadow-[0_0_20px_rgba(16,185,129,0.15)]" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between gap-4">

@@ -1,17 +1,19 @@
+import type { ReactNode } from "react";
+
 export function Badge({
   children,
   tone = "neutral",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   tone?: "neutral" | "success" | "warning" | "danger" | "info" | "primary";
 }) {
   const map = {
-    neutral: "bg-[#F2F4F8] text-mute",
-    success: "bg-[#DCFCE7] text-[#16A34A]",
-    warning: "bg-[#FEF3C7] text-[#B45309]",
-    danger: "bg-[#FEE2E2] text-[#EF4444]",
-    info: "bg-[#DBEAFE] text-[#3B82F6]",
-    primary: "bg-[#EDE9FE] text-primary",
+    neutral: "bg-slate-800 text-slate-300 border border-slate-700/70",
+    success: "bg-emerald-950/70 text-emerald-300 border border-emerald-500/30",
+    warning: "bg-amber-950/70 text-amber-300 border border-amber-500/30",
+    danger: "bg-rose-950/70 text-rose-300 border border-rose-500/30",
+    info: "bg-cyan-950/70 text-cyan-300 border border-cyan-500/30",
+    primary: "bg-indigo-950/70 text-indigo-300 border border-indigo-500/30",
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${map[tone]}`}>

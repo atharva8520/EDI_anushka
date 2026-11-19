@@ -255,7 +255,7 @@ export function OverviewTab({
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-ink">Project Title (Leader Only)</label>
                     <input
-                      className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+                      className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       placeholder="Enter project title"
@@ -272,7 +272,7 @@ export function OverviewTab({
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-ink">Project Summary</label>
                   <textarea
-                    className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary min-h-[90px]"
+                    className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan min-h-[90px]"
                     value={editSummary}
                     onChange={(e) => setEditSummary(e.target.value)}
                     placeholder="Describe your solution architecture, tech stack, and goals..."
@@ -285,7 +285,7 @@ export function OverviewTab({
                     GitHub Repository URL
                   </label>
                   <input
-                    className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+                    className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
                     value={editRepoUrl}
                     onChange={(e) => setEditRepoUrl(e.target.value)}
                     placeholder="https://github.com/owner/repository"

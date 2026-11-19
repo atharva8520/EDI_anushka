@@ -296,7 +296,7 @@ export function ChecklistTab({
                     className={`grid h-6 w-6 place-items-center rounded-md border transition ${
                       item.is_done
                         ? "border-[#16A34A] bg-[#DCFCE7] text-[#16A34A]"
-                        : "border-slate-300 bg-white text-transparent hover:border-slate-400"
+                        : "border-slate-600 bg-slate-900 text-transparent hover:border-slate-400"
                     } ${!isMember ? "cursor-default opacity-70" : "cursor-pointer"}`}
                     aria-label={item.is_done ? "Mark as incomplete" : "Mark as complete"}
                   >
@@ -384,7 +384,7 @@ export function ChecklistTab({
           <div>
             <label className="mb-1 block text-xs font-semibold text-ink">Title</label>
             <input
-              className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+              className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
               value={itemTitle}
               onChange={(e) => setItemTitle(e.target.value)}
               placeholder="e.g. Repository link added and public"
@@ -411,7 +411,7 @@ export function ChecklistTab({
           <div>
             <label className="mb-1 block text-xs font-semibold text-ink">Deliverable URL (Optional)</label>
             <input
-              className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+              className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
               value={itemUrl}
               onChange={(e) => setItemUrl(e.target.value)}
               placeholder="https://..."

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html,
@@ -14,66 +14,121 @@ body,
 
 body {
   margin: 0;
-  background: #f7f8fc;
-  color: #111827;
+  background-color: #0A0D14;
+  color: #F8FAFC;
   font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: rgba(91, 75, 219, 0.18);
+  background: rgba(0, 242, 254, 0.25);
+  color: #FFFFFF;
 }
 
+/* Cosmic Cyber Background Mesh */
+.mesh {
+  background:
+    radial-gradient(1000px 500px at 15% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
+    radial-gradient(800px 450px at 85% 10%, rgba(0, 242, 254, 0.14), transparent 55%),
+    radial-gradient(900px 600px at 50% 90%, rgba(139, 92, 246, 0.12), transparent 60%),
+    #0A0D14;
+}
+
+/* Gradient Presets */
 .hn-gradient {
-  background-image: linear-gradient(135deg, #5b4bdb 0%, #20b8e6 100%);
+  background-image: linear-gradient(135deg, #6366F1 0%, #00F2FE 100%);
 }
 
 .hn-gradient-2 {
-  background-image: linear-gradient(135deg, #8b5cf6 0%, #5b4bdb 100%);
+  background-image: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
 }
 
-.mesh {
-  background:
-    radial-gradient(900px 480px at 10% -10%, rgba(91, 75, 219, 0.12), transparent 55%),
-    radial-gradient(700px 400px at 100% 0%, rgba(32, 184, 230, 0.12), transparent 50%),
-    #f7f8fc;
+.hn-gradient-fire {
+  background-image: linear-gradient(135deg, #EC4899 0%, #8B5CF6 50%, #00F2FE 100%);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.35);
+}
+
+.glow-violet {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);
+}
+
+.glow-card {
+  box-shadow: 0 10px 35px -5px rgba(0, 0, 0, 0.7), 0 0 15px -3px rgba(0, 242, 254, 0.12);
+}
+
+/* Glassmorphism Surface */
+.glass-panel {
+  background: rgba(19, 28, 46, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(0, 242, 254, 0.35);
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Subtle Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #F8FAFC 0%, #00F2FE 50%, #8B5CF6 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(3deg);
+  }
 }
 
 .orb {
   position: absolute;
   border-radius: 999px;
-  filter: blur(2px);
-  animation: float 8s ease-in-out infinite;
+  filter: blur(40px);
+  animation: float 10s ease-in-out infinite;
+  opacity: 0.25;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
   }
   50% {
-    transform: translateY(-14px) rotate(6deg);
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
 
-@keyframes drift {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 100% 50%;
-  }
-}
-
-.gradient-move {
-  background-size: 180% 180%;
-  animation: drift 8s ease infinite alternate;
+.pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation: none !important;
     transition: none !important;
   }

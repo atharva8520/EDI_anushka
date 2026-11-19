@@ -22,6 +22,9 @@ import { TeamPage } from "./pages/teams/TeamPage";
 import { TeammateSearchPage } from "./pages/teams/TeammateSearchPage";
 import { InvitesPage } from "./pages/teams/InvitesPage";
 import { WorkspacePage } from "./pages/workspace/WorkspacePage";
+import { CompaniesPage } from "./pages/companies/CompaniesPage";
+import { ProjectsShowcasePage } from "./pages/projects/ProjectsShowcasePage";
+import { HostHackathonPage } from "./pages/organizer/HostHackathonPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { token, loading } = useAuth();
@@ -61,8 +64,11 @@ function PublicAuthRoute({ children }: { children: ReactNode }) {
 export function App() {
   return (
     <Routes>
-      {/* Public Landing */}
+      {/* Public Landing & Discoveries */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/companies" element={<CompaniesPage />} />
+      <Route path="/projects" element={<ProjectsShowcasePage />} />
+      <Route path="/host" element={<HostHackathonPage />} />
 
       {/* Auth Routes (Outside authenticated shell) */}
       <Route
@@ -96,6 +102,9 @@ export function App() {
         <Route path="hackathons" element={<HackathonListPage />} />
         <Route path="hackathons/:id" element={<HackathonDetailPage />} />
         <Route path="hackathons/:id/problems/:problemId" element={<ProblemDetailPage />} />
+        <Route path="companies" element={<CompaniesPage />} />
+        <Route path="projects" element={<ProjectsShowcasePage />} />
+        <Route path="host" element={<HostHackathonPage />} />
         <Route path="team" element={<TeamPage />} />
         <Route path="team/find" element={<TeammateSearchPage />} />
         <Route path="invites" element={<InvitesPage />} />
