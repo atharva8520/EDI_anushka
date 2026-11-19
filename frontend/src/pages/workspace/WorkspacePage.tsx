@@ -44,8 +44,9 @@ import { ChecklistTab } from "./ChecklistTab";
 import { ActivityTab } from "./ActivityTab";
 import { TaskModal } from "./TaskModal";
 import { CopilotTab } from "./CopilotTab";
+import { SubmissionTab } from "./SubmissionTab";
 
-type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity" | "copilot";
+type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity" | "copilot" | "submission";
 
 export function WorkspacePage() {
   const { profile } = useAuth();
@@ -554,6 +555,17 @@ export function WorkspacePage() {
           <Sparkles className="h-4 w-4 text-primary" />
           AI Sprint Copilot
         </button>
+
+        <button
+          onClick={() => setCurrentTab("submission")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "submission"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
+        >
+          <Award className="h-4 w-4 text-amber-500" />
+          Final Submission
+        </button>
       </div>
 
       {/* Tab Panels */}
@@ -640,6 +652,14 @@ export function WorkspacePage() {
             isLeader={isLeader}
             isMember={isMember}
             onTasksGenerated={refreshProjectData}
+          />
+        )}
+
+        {currentTab === "submission" && (
+          <SubmissionTab
+            projectId={project.id}
+            isMember={isMember}
+            onProjectUpdated={refreshProjectData}
           />
         )}
       </div>
