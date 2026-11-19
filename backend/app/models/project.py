@@ -32,6 +32,16 @@ class Project(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     repo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    demo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    pitch_deck_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    tech_stack: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    is_submitted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    submitted_by: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    submission_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
@@ -40,6 +50,10 @@ class Project(Base):
 
     team = relationship("Team", back_populates="project")
     creator = relationship("User", foreign_keys=[created_by])
+    submitter = relationship("User", foreign_keys=[submitted_by])
+    evaluations = relationship(
+        "ProjectEvaluation", back_populates="project", cascade="all, delete-orphan"
+    )
     milestones = relationship(
         "Milestone", back_populates="project", cascade="all, delete-orphan", order_by="Milestone.created_at.asc()"
     )

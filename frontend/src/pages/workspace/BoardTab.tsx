@@ -6,6 +6,7 @@ import {
   Calendar,
   Layers,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import type { Task, Member, Milestone, TaskStatus, TaskPriority } from "../../types";
 import { Badge } from "../../components/Badge";
@@ -22,6 +23,7 @@ interface BoardTabProps {
   onNewTask: (status: TaskStatus) => void;
   onMoveTask: (taskId: string, targetStatus: TaskStatus, newPosition: number) => Promise<void>;
   onDeleteTask: (taskId: string) => Promise<void>;
+  onOpenCopilot?: () => void;
 }
 
 const COLUMNS: { id: TaskStatus; label: string; headerColor: string }[] = [
@@ -40,6 +42,7 @@ export function BoardTab({
   onNewTask,
   onMoveTask,
   onDeleteTask,
+  onOpenCopilot,
 }: BoardTabProps) {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<TaskStatus | null>(null);
@@ -159,6 +162,22 @@ export function BoardTab({
           <span>{actionError}</span>
         </div>
       )}
+
+      {/* Kanban Subheader with AI Copilot Launcher */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-1">
+        <span className="text-xs text-mute font-medium">
+          Drag cards across columns to update task status.
+        </span>
+        {onOpenCopilot && isMember && (
+          <button
+            onClick={onOpenCopilot}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition self-start sm:self-auto"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>AI Sprint Copilot & Backlog</span>
+          </button>
+        )}
+      </div>
 
       {/* 4 Column Kanban Board */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

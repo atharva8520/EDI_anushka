@@ -1,8 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, Plus, Check, AlertCircle, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Check,
+  AlertCircle,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Bot,
+  ThumbsUp,
+  ThumbsDown,
+  X,
+} from "lucide-react";
 import { api, apiError } from "../../api/client";
-import type { StudentSearchItem, TeamWorkspace, MyTeamItem } from "../../types";
+import type {
+  StudentSearchItem,
+  TeamWorkspace,
+  MyTeamItem,
+  MatchExplanationOut,
+} from "../../types";
 import { PLATFORM_DOMAINS, AVAILABILITY_OPTIONS } from "../../constants";
 import { Button } from "../../components/Button";
 import { Badge } from "../../components/Badge";
@@ -36,6 +54,13 @@ export function TeammateSearchPage() {
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+
+  // AI Explain Match Modal state
+  const [explainCandidate, setExplainCandidate] = useState<StudentSearchItem | null>(null);
+  const [explaining, setExplaining] = useState(false);
+  const [explanationData, setExplanationData] = useState<MatchExplanationOut | null>(null);
+  const [explainError, setExplainError] = useState<string | null>(null);
+  const [feedbackSent, setFeedbackSent] = useState<"up" | "down" | null>(null);
 
   // Load all user teams to allow multi-team leaders to choose target squad
   useEffect(() => {
@@ -133,6 +158,42 @@ export function TeammateSearchPage() {
       setInviteError(apiError(err, `Failed to invite ${student.full_name}`));
     } finally {
       setInvitingId(null);
+    }
+  }
+
+  async function handleOpenExplainMatch(student: StudentSearchItem) {
+    const targetTeamId = selectedTeamId || myTeam?.team.id;
+    if (!targetTeamId) return;
+    setExplainCandidate(student);
+    setExplaining(true);
+    setExplainError(null);
+    setExplanationData(null);
+    setFeedbackSent(null);
+
+    try {
+      const res = await api.post<MatchExplanationOut>(
+        `/ai/teams/${targetTeamId}/explain-match`,
+        { candidate_id: student.id }
+      );
+      setExplanationData(res.data);
+    } catch (err) {
+      setExplainError(apiError(err, "Failed to analyze match rationale"));
+    } finally {
+      setExplaining(false);
+    }
+  }
+
+  async function handleExplainFeedback(rating: 1 | -1) {
+    if (!explanationData?.run_id || feedbackSent) return;
+    try {
+      await api.post("/ai/feedback", {
+        run_id: explanationData.run_id,
+        candidate_id: explanationData.candidate_id,
+        rating: rating,
+      });
+      setFeedbackSent(rating === 1 ? "up" : "down");
+    } catch {
+      // Ignore
     }
   }
 
@@ -359,13 +420,24 @@ export function TeammateSearchPage() {
                   ) : null}
                 </div>
 
-                {isLeader ? (
-                  <div className="mt-5 border-t border-line/60 pt-3 flex justify-end">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line/60 pt-3">
+                  {(selectedTeamId || myTeam?.team?.id) ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenExplainMatch(student)}
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Explain Match</span>
+                    </button>
+                  ) : <span />}
+
+                  {isLeader ? (
                     <Button
                       variant={hasInvited ? "secondary" : "primary"}
                       disabled={hasInvited || isInvitingThis || myTeam?.team.is_full}
                       onClick={() => handleInvite(student)}
-                      className="gap-1.5 text-xs py-1.5 w-full justify-center"
+                      className="gap-1.5 text-xs py-1.5 px-3"
                     >
                       {hasInvited ? (
                         <>
@@ -375,12 +447,12 @@ export function TeammateSearchPage() {
                       ) : (
                         <>
                           <Plus className="h-3.5 w-3.5" />
-                          {isInvitingThis ? "Sending..." : "Invite to Team"}
+                          {isInvitingThis ? "Sending..." : "Invite"}
                         </>
                       )}
                     </Button>
-                  </div>
-                ) : null}
+                  ) : null}
+                </div>
               </Card>
             );
           })}
@@ -413,6 +485,95 @@ export function TeammateSearchPage() {
           </Button>
         </div>
       ) : null}
+
+      {/* AI Explain Match Modal */}
+      {explainCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-lg rounded-2xl border border-line bg-surface-card p-6 shadow-2xl">
+            <button
+              onClick={() => setExplainCandidate(null)}
+              className="absolute right-4 top-4 text-mute hover:text-ink"
+              aria-label="Close dialog"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-ink">AI Match Rationale</h3>
+                <p className="text-xs text-mute">
+                  Match fit analysis for <span className="font-semibold text-ink">{explainCandidate.full_name}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {explaining ? (
+                <div className="space-y-3 py-8 text-center">
+                  <Bot className="mx-auto h-8 w-8 text-primary animate-pulse" />
+                  <p className="text-xs text-mute">
+                    Groq LLM is evaluating candidate profile against team needs and problem statement...
+                  </p>
+                </div>
+              ) : explainError ? (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+                  {explainError}
+                </div>
+              ) : explanationData ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs leading-relaxed text-ink whitespace-pre-wrap">
+                    {explanationData.rationale}
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-line/60 pt-3">
+                    <div className="flex items-center gap-2 text-xs text-mute">
+                      <span>Was this helpful?</span>
+                      <button
+                        onClick={() => handleExplainFeedback(1)}
+                        disabled={Boolean(feedbackSent)}
+                        className={`p-1.5 rounded hover:bg-canvas transition ${
+                          feedbackSent === "up" ? "text-emerald-500 font-bold" : ""
+                        }`}
+                        title="Helpful"
+                      >
+                        <ThumbsUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleExplainFeedback(-1)}
+                        disabled={Boolean(feedbackSent)}
+                        className={`p-1.5 rounded hover:bg-canvas transition ${
+                          feedbackSent === "down" ? "text-rose-500 font-bold" : ""
+                        }`}
+                        title="Unhelpful"
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {isLeader && !invitedIds.has(explainCandidate.id) && (
+                      <Button
+                        variant="primary"
+                        onClick={() => {
+                          handleInvite(explainCandidate);
+                          setExplainCandidate(null);
+                        }}
+                        className="gap-1.5 text-xs py-1.5"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Invite Candidate
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

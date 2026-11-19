@@ -43,8 +43,9 @@ import { NotesTab } from "./NotesTab";
 import { ChecklistTab } from "./ChecklistTab";
 import { ActivityTab } from "./ActivityTab";
 import { TaskModal } from "./TaskModal";
+import { CopilotTab } from "./CopilotTab";
 
-type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity";
+type ActiveTab = "overview" | "board" | "list" | "milestones" | "notes" | "checklist" | "activity" | "copilot";
 
 export function WorkspacePage() {
   const { profile } = useAuth();
@@ -542,6 +543,17 @@ export function WorkspacePage() {
           <Activity className="h-4 w-4" />
           Activity Log
         </button>
+
+        <button
+          onClick={() => setCurrentTab("copilot")}
+          className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition whitespace-nowrap ${currentTab === "copilot"
+              ? "border-primary text-primary"
+              : "border-transparent text-mute hover:text-ink"
+            }`}
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          AI Sprint Copilot
+        </button>
       </div>
 
       {/* Tab Panels */}
@@ -571,6 +583,7 @@ export function WorkspacePage() {
             onNewTask={(status) => handleOpenNewTask(status)}
             onMoveTask={handleMoveTask}
             onDeleteTask={handleDeleteTask}
+            onOpenCopilot={() => setCurrentTab("copilot")}
           />
         )}
 
@@ -619,6 +632,16 @@ export function WorkspacePage() {
         )}
 
         {currentTab === "activity" && <ActivityTab projectId={project.id} />}
+
+        {currentTab === "copilot" && (
+          <CopilotTab
+            teamId={teamWorkspace.team.id}
+            problemTitle={project.problem_title || teamWorkspace.team.selected_problem?.title}
+            isLeader={isLeader}
+            isMember={isMember}
+            onTasksGenerated={refreshProjectData}
+          />
+        )}
       </div>
 
       {/* Task Create / Edit Modal */}
