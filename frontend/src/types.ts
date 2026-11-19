@@ -575,3 +575,29 @@ export interface ProjectShowcaseItem {
   stars: number;
 }
 
+export interface MatchExplanationOut {
+  candidate_id: string;
+  rationale: string;
+  run_id: string;
+}
+
+export interface TaskDecompositionItem {
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
+  category: string;
+}
+
+export interface TaskDecompositionOut {
+  run_id: string;
+  problem_title: string;
+  tasks: TaskDecompositionItem[];
+  tasks_created: number;
+}
+
+export interface CopilotChatOut {
+  reply: string;
+  run_id: string;
+  model: string;
+}
+
