@@ -225,3 +225,97 @@ def test_create_admin_cli_main_with_env(client, monkeypatch, capsys):
     assert "EnvAdminPassword123!" not in captured.out
     assert "EnvAdminPassword123!" not in captured.err
 
+
+# =========================================================================
+# 4. app/seed.py safety tests
+# =========================================================================
+
+
+def test_seed_refuses_in_production_without_allow_flag(client, monkeypatch):
+    import app.seed as seed_module
+    from app.core.config import settings
+    _, db = client
+
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    monkeypatch.delenv("ALLOW_PRODUCTION_SEED", raising=False)
+
+    with pytest.raises(RuntimeError, match="Seeding is disabled in production"):
+        seed_module.seed(db=db)
+
+
+def test_seed_refuses_in_production_without_mandatory_passwords(client, monkeypatch):
+    import app.seed as seed_module
+    from app.core.config import settings
+    _, db = client
+
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    monkeypatch.setenv("ALLOW_PRODUCTION_SEED", "true")
+    monkeypatch.delenv("SEED_ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("SEED_STUDENT_PASSWORD", raising=False)
+
+    with pytest.raises(ValueError, match="mandatory"):
+        seed_module.seed(db=db)
+
+
+def test_seed_production_with_mandatory_passwords_succeeds(client, monkeypatch):
+    import app.seed as seed_module
+    from app.core.config import settings
+    _, db = client
+
+    monkeypatch.setattr(settings, "APP_ENV", "production")
+    monkeypatch.setenv("ALLOW_PRODUCTION_SEED", "true")
+    monkeypatch.setenv("SEED_ADMIN_PASSWORD", "ProdAdminSecure123!")
+    monkeypatch.setenv("SEED_STUDENT_PASSWORD", "ProdStudentSecure123!")
+
+    seed_module.seed(db=db)
+
+    admin = db.scalar(select(User).where(User.email == "admin@hacknova.dev"))
+    assert admin is not None
+    assert verify_password("ProdAdminSecure123!", admin.password_hash) is True
+
+    student = db.scalar(select(User).where(User.email == "aditi@hacknova.dev"))
+    assert student is not None
+    assert verify_password("ProdStudentSecure123!", student.password_hash) is True
+
+
+def test_seed_non_production_defaults(client, monkeypatch):
+    import app.seed as seed_module
+    from app.core.config import settings
+    _, db = client
+
+    monkeypatch.setattr(settings, "APP_ENV", "development")
+    monkeypatch.delenv("ALLOW_PRODUCTION_SEED", raising=False)
+    monkeypatch.delenv("SEED_ADMIN_PASSWORD", raising=False)
+    monkeypatch.delenv("SEED_STUDENT_PASSWORD", raising=False)
+
+    seed_module.seed(db=db)
+
+    admin = db.scalar(select(User).where(User.email == "admin@hacknova.dev"))
+    assert admin is not None
+    assert verify_password("Admin@12345", admin.password_hash) is True
+
+    student = db.scalar(select(User).where(User.email == "aditi@hacknova.dev"))
+    assert student is not None
+    assert verify_password("Student@123", student.password_hash) is True
+
+
+def test_seed_non_production_custom_passwords(client, monkeypatch):
+    import app.seed as seed_module
+    from app.core.config import settings
+    _, db = client
+
+    monkeypatch.setattr(settings, "APP_ENV", "development")
+    monkeypatch.setenv("SEED_ADMIN_PASSWORD", "DevAdminCustom123!")
+    monkeypatch.setenv("SEED_STUDENT_PASSWORD", "DevStudentCustom123!")
+
+    seed_module.seed(db=db)
+
+    admin = db.scalar(select(User).where(User.email == "admin@hacknova.dev"))
+    assert admin is not None
+    assert verify_password("DevAdminCustom123!", admin.password_hash) is True
+
+    student = db.scalar(select(User).where(User.email == "aditi@hacknova.dev"))
+    assert student is not None
+    assert verify_password("DevStudentCustom123!", student.password_hash) is True
+
+
