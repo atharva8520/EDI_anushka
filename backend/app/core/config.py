@@ -1,4 +1,16 @@
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def normalize_database_url(url: str) -> str:
+    """Normalize PostgreSQL URL schemes to use psycopg3 driver.
+    Leaves sqlite and already normalized postgresql+psycopg URLs unchanged.
+    """
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
 
 
 class Settings(BaseSettings):
@@ -15,9 +27,28 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_PROVIDER: str = "stub"
 
+    @field_validator("DATABASE_URL", mode="after")
+    @classmethod
+    def _normalize_db_url(cls, v: str) -> str:
+        return normalize_database_url(v)
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [item.strip() for item in self.CORS_ORIGINS.split(",") if item.strip()]
+
+    @model_validator(mode="after")
+    def validate_production_config(self) -> "Settings":
+        if self.APP_ENV.lower() == "production":
+            if self.JWT_SECRET == "change-me-to-a-long-random-string":
+                raise ValueError("In production, JWT_SECRET cannot be the default value.")
+            if len(self.JWT_SECRET) < 32:
+                raise ValueError("In production, JWT_SECRET must be at least 32 characters long.")
+            origins = self.cors_origin_list
+            if not origins:
+                raise ValueError("In production, CORS_ORIGINS cannot be empty.")
+            if any(origin == "*" for origin in origins):
+                raise ValueError("In production, CORS_ORIGINS cannot contain wildcard '*'.")
+        return self
 
 
 settings = Settings()
