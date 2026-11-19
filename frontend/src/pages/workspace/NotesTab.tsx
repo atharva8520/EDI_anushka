@@ -159,7 +159,7 @@ export function NotesTab({
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute" />
           <input
-            className="w-full rounded-[12px] border border-line bg-white pl-9 pr-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+            className="w-full rounded-[12px] border border-slate-700 bg-slate-900 pl-9 pr-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notes by title..."
@@ -273,7 +273,7 @@ export function NotesTab({
           <div>
             <label className="mb-1 block text-xs font-semibold text-ink">Title</label>
             <input
-              className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2 text-xs text-ink outline-none transition focus:border-primary"
+              className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs text-slate-100 outline-none transition focus:border-cyan"
               value={noteTitle}
               onChange={(e) => setNoteTitle(e.target.value)}
               placeholder="e.g. Architecture Overview & Tech Stack"
@@ -289,7 +289,7 @@ export function NotesTab({
               </span>
             </div>
             <textarea
-              className="w-full rounded-[12px] border border-line bg-white px-3.5 py-2.5 text-xs text-ink outline-none transition focus:border-primary min-h-[180px]"
+              className="w-full rounded-[12px] border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-xs text-slate-100 outline-none transition focus:border-cyan min-h-[180px]"
               value={noteBody}
               onChange={(e) => setNoteBody(e.target.value)}
               placeholder="Write your technical note, architecture choices, or instructions here..."

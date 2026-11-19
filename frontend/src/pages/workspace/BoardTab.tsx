@@ -186,7 +186,7 @@ export function BoardTab({
                 {isMember && (
                   <button
                     onClick={() => onNewTask(col.id)}
-                    className="flex h-6 w-6 items-center justify-center rounded-md border border-line bg-white text-mute hover:border-primary hover:text-primary"
+                    className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-700 bg-surface-elevated text-slate-300 hover:border-cyan hover:text-primary"
                     title={`Add task to ${col.label}`}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -226,7 +226,7 @@ export function BoardTab({
                           setDragOverTaskId(task.id);
                         }}
                         onDrop={(e) => handleDropOnTask(e, task)}
-                        className={`group relative rounded-xl border bg-white p-3.5 shadow-sm transition-all ${
+                        className={`group relative rounded-xl border border-slate-700/80 bg-surface-card/90 p-3.5 shadow-sm transition-all ${
                           isDragging ? "opacity-40 shadow-none" : "hover:border-primary/50 hover:shadow-cardHover"
                         } ${
                           dragOverTaskId === task.id ? "border-t-2 border-t-primary" : "border-line"

@@ -123,22 +123,21 @@ export function HackathonListPage() {
               Explore active hackathons, examine official problem statements, and form your squad.
             </p>
           </div>
-          {role === "admin" && (
-            <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link to="/app/host">
+              <Button variant="primary" className="text-xs gap-1.5 py-2 bg-gradient-to-r from-cyan to-indigo-600 shadow-glow">
+                <Plus className="h-4 w-4" /> Host Hackathon
+              </Button>
+            </Link>
+            {role === "admin" && (
               <Link to="/app/admin/hackathons">
                 <Button variant="secondary" className="text-xs gap-1.5 py-2">
-                  <ShieldCheck className="h-4 w-4 text-amber-600" />
+                  <ShieldCheck className="h-4 w-4 text-amber-400" />
                   Admin Console
                 </Button>
               </Link>
-              <Link to="/app/admin/hackathons/new">
-                <Button variant="primary" className="text-xs gap-1.5 py-2">
-                  <Plus className="h-4 w-4" />
-                  Create Hackathon
-                </Button>
-              </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Search & Filter Toolbar */}
@@ -213,7 +212,7 @@ export function HackathonListPage() {
                 </select>
                 <button
                   onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-                  className="rounded-[10px] border border-line bg-canvas px-2.5 py-1.5 text-xs font-semibold text-mute hover:text-ink"
+                  className="rounded-[10px] border border-line bg-surface-card px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-cyan hover:border-cyan/40"
                   title="Toggle Asc/Desc"
                 >
                   {sortOrder === "asc" ? "ASC" : "DESC"}
@@ -234,8 +233,8 @@ export function HackathonListPage() {
                 }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
                   selectedDomain === d
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-canvas hover:bg-line/60 text-mute hover:text-ink"
+                    ? "bg-gradient-to-r from-primary to-cyan text-white shadow-glow"
+                    : "bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60"
                 }`}
               >
                 {d === "All" ? "All Tracks" : d}
@@ -283,7 +282,7 @@ export function HackathonListPage() {
               {hackathons.map((h) => {
                 const isDeadlinePassed = new Date() > new Date(h.registration_deadline);
                 return (
-                  <Card key={h.id} className="flex flex-col justify-between p-6 transition hover:shadow-lift">
+                  <Card key={h.id} className="flex flex-col justify-between p-6 transition-all duration-300 glass-panel-hover border-line hover:border-cyan/40 bg-surface-card/90">
                     <div>
                       {/* Top Meta */}
                       <div className="flex items-center justify-between gap-2 mb-3">
@@ -309,7 +308,7 @@ export function HackathonListPage() {
                         {h.domains.map((d) => (
                           <span
                             key={d}
-                            className="inline-block rounded-md bg-canvas px-2 py-0.5 text-[11px] font-medium text-mute border border-line"
+                            className="inline-block rounded-md bg-slate-800/80 px-2 py-0.5 text-[11px] font-semibold text-slate-300 border border-slate-700/60"
                           >
                             {d}
                           </span>
@@ -355,7 +354,7 @@ export function HackathonListPage() {
                       </div>
 
                       {isDeadlinePassed ? (
-                        <div className="mb-2 text-[11px] font-semibold text-amber-600 bg-amber-50 rounded-lg px-2 py-1 text-center border border-amber-200">
+                        <div className="mb-2 text-[11px] font-semibold text-amber-300 bg-amber-950/40 rounded-lg px-2 py-1 text-center border border-amber-500/30">
                           Registration Closed
                         </div>
                       ) : null}

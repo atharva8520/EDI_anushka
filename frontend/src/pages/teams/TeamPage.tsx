@@ -637,7 +637,7 @@ export function TeamPage() {
               <span className="font-mono text-sm font-bold text-ink">{team.invite_code}</span>
               <button
                 onClick={handleCopyInviteCode}
-                className="rounded p-1 text-mute hover:text-ink hover:bg-white transition"
+                className="rounded p-1 text-mute hover:text-ink hover:bg-slate-800 transition"
                 title="Copy Invite Code"
                 aria-label="Copy Invite Code"
               >
@@ -797,7 +797,7 @@ export function TeamPage() {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="rounded-lg border border-line bg-white p-2.5 shadow-lift text-xs">
+                        <div className="rounded-lg border border-slate-700 bg-surface-elevated p-2.5 shadow-lift text-xs">
                           <p className="font-bold text-ink">{data.category}</p>
                           <p className="text-primary font-semibold">
                             Coverage: {data.coverage}%
@@ -1160,7 +1160,7 @@ export function TeamPage() {
                       {member.skills.slice(0, 4).map((s) => (
                         <span
                           key={s.skill_id}
-                          className="rounded bg-white px-2 py-0.5 text-[11px] font-medium text-ink border border-line"
+                          className="rounded bg-slate-800/80 px-2 py-0.5 text-[11px] font-medium text-slate-200 border border-slate-700/60"
                         >
                           {s.name}
                         </span>
