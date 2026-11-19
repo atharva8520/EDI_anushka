@@ -100,3 +100,48 @@ class FeedbackSummaryOut(BaseModel):
     avg_features_up: CandidateScoreBreakdown
     avg_features_down: CandidateScoreBreakdown
     recent_comments: list[FeedbackCommentOut]
+
+
+# =========================================================================
+# Module 5b: LLM Assistant & Copilot Schemas
+# =========================================================================
+
+
+class MatchExplanationRequest(BaseModel):
+    candidate_id: UUID
+
+
+class MatchExplanationOut(BaseModel):
+    candidate_id: UUID
+    rationale: str
+    run_id: UUID
+
+
+class TaskDecompositionItem(BaseModel):
+    title: str
+    description: str
+    priority: str = "medium"  # "high", "medium", "low"
+    category: str = "General"  # "Backend", "Frontend", "AI/ML", "DevOps", "UI/UX"
+
+
+class TaskDecompositionRequest(BaseModel):
+    auto_create: bool = False
+
+
+class TaskDecompositionOut(BaseModel):
+    run_id: UUID
+    problem_title: str
+    tasks: list[TaskDecompositionItem]
+    tasks_created: int = 0
+
+
+class CopilotChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+    history: list[dict[str, str]] = Field(default_factory=list)
+
+
+class CopilotChatOut(BaseModel):
+    reply: str
+    run_id: UUID
+    model: str
+
