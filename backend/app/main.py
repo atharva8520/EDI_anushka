@@ -22,6 +22,17 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "HackNova API",
+        "status": "online",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "hacknova"}
