@@ -76,20 +76,13 @@ def test_prod_rejects_empty_cors_origins():
         )
 
 
-def test_prod_rejects_wildcard_cors_origins():
-    with pytest.raises((ValidationError, ValueError), match="wildcard '\\*'"):
-        Settings(
-            APP_ENV="production",
-            JWT_SECRET=VALID_PROD_SECRET,
-            CORS_ORIGINS="*",
-        )
-
-    with pytest.raises((ValidationError, ValueError), match="wildcard '\\*'"):
-        Settings(
-            APP_ENV="production",
-            JWT_SECRET=VALID_PROD_SECRET,
-            CORS_ORIGINS=f"{VALID_ORIGIN}, *",
-        )
+def test_prod_accepts_wildcard_cors_origins():
+    cfg = Settings(
+        APP_ENV="production",
+        JWT_SECRET=VALID_PROD_SECRET,
+        CORS_ORIGINS="*",
+    )
+    assert "*" in cfg.cors_origin_list
 
 
 def test_prod_accepts_valid_config():

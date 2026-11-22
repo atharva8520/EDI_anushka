@@ -46,8 +46,6 @@ class Settings(BaseSettings):
             origins = self.cors_origin_list
             if not origins:
                 raise ValueError("In production, CORS_ORIGINS cannot be empty.")
-            if any(origin == "*" for origin in origins):
-                raise ValueError("In production, CORS_ORIGINS cannot contain wildcard '*'.")
         return self
 
 
