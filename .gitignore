@@ -27,7 +27,9 @@ uploads/
 faiss_index/
 *.sqlite3
 *.db
+*.backup
 
 *.tsbuildinfo
 
 *.tsbuildinfo
+.neon
