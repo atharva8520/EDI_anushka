@@ -1,0 +1,20 @@
+name: Keep Render Backend Awake 24/7
+
+on:
+  schedule:
+    # Trigger every 10 minutes to prevent Render free-tier from idling
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-render:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend Health Endpoint
+        run: |
+          TARGET_URL="${{ secrets.RENDER_BACKEND_URL }}"
+          if [ -z "$TARGET_URL" ]; then
+            TARGET_URL="https://edi-anushka.onrender.com"
+          fi
+          echo "Pinging $TARGET_URL/health..."
+          curl -s -f -m 15 "$TARGET_URL/health" || curl -s -f -m 15 "$TARGET_URL/" || true
